@@ -1,1 +1,58 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><title>Corncob social preview composition</title><style>*{box-sizing:border-box}html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#102019;color:#f5f3ec;font-family:system-ui,sans-serif}body::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#102019ff 0%,#102019f0 34%,#10201955 62%,#10201915),url('../public/images/hero.webp') 75% center/cover}.copy{position:absolute;inset:45px 50px}.eyebrow{font-size:13px;font-weight:750;letter-spacing:3px;color:#e4c683}h1{font:400 80px/1.03 Georgia,serif;letter-spacing:-4px;margin:62px 0 24px;max-width:650px}p{font-size:20px;line-height:1.65;color:#cfddcf;max-width:500px}.foot{position:absolute;left:50px;right:50px;bottom:35px;border-top:1px solid #8daa86;padding-top:18px;display:flex;justify-content:space-between;font-size:13px;letter-spacing:1px}.foot b{color:#e4c683;font-weight:600}</style><div class="copy"><div class="eyebrow">THE LOST ENGINES PROJECT</div><h1>Corncob<br>Contemplated</h1><p>A flight simulator with other plans.<br>Maps, models and some very strange code.</p></div><div class="foot"><b>EXPLORING CORNCOB 3D</b><span>lost-engines.github.io/corncob-contemplated</span></div>
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Corncob social preview composition</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#102019;color:#f5f3ec;font-family:system-ui,sans-serif}
+.sky{position:absolute;inset:0 0 0 520px;background:linear-gradient(160deg,#293d47 0%,#18352b 62%,#102019 100%)}
+.sky::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#102019,transparent 38%),linear-gradient(0deg,#102019,transparent 35%)}
+.copy{position:absolute;top:44px;left:50px;z-index:2}
+.eyebrow{font-size:13px;font-weight:750;letter-spacing:3px;color:#e4c683}
+h1{font:400 116px/1 Georgia,serif;letter-spacing:-5px;margin:55px 0 24px}
+.lead{font-size:22px;line-height:1.5;margin:0;color:#e5e9dd;max-width:450px}
+.detail{font-size:17px;line-height:1.6;color:#b8cabd;margin:10px 0 0;max-width:440px}
+canvas{position:absolute;display:block;z-index:1}
+#plane{left:518px;top:57px;width:650px;height:320px}
+#crew{left:906px;top:319px;width:250px;height:250px;z-index:3}
+#sun{left:1015px;top:24px;width:140px;height:140px;opacity:.8}
+.shots{position:absolute;left:50px;top:391px;display:flex;gap:16px;z-index:2}
+.shot{margin:0;position:relative;width:222px;height:159px;border:1px solid #78917c;overflow:hidden;background:#102019;box-shadow:0 8px 28px #0004}
+.shot img{display:block;width:100%;height:134px;object-fit:cover;image-rendering:pixelated}
+.shot figcaption{height:24px;padding:5px 10px;background:#162a20;color:#dbe4d6;font-size:10px;letter-spacing:1.8px;font-weight:650;text-transform:uppercase}
+.map img{object-position:center}
+.foot{position:absolute;left:50px;right:50px;bottom:27px;border-top:1px solid #5c7664;padding-top:15px;display:flex;justify-content:space-between;font-size:12px;letter-spacing:1.3px;z-index:4}
+.foot b{color:#e4c683;font-weight:600}
+</style>
+<div class="sky"></div>
+<div class="copy"><div class="eyebrow">THE LOST ENGINES PROJECT</div><h1>Corncob</h1><p class="lead">A flight simulator with other plans.</p><p class="detail">Maps, models, music and the story<br>of taking it apart.</p></div>
+<canvas id="plane" width="650" height="320" aria-label="Corncob’s propeller aircraft"></canvas>
+<canvas id="crew" width="250" height="250" aria-label="A member of the ground crew raising a finger"></canvas>
+<canvas id="sun" width="140" height="140" aria-label="The early sun model with a face"></canvas>
+<div class="shots"><figure class="shot"><img src="../public/images/cockpit.webp" alt="The original cockpit in our native reconstruction"><figcaption>Back in the cockpit</figcaption></figure><figure class="shot map"><img src="../public/images/atlas.webp" alt="Recovered world placements in the atlas"><figcaption>The worlds, laid out</figcaption></figure></div>
+<div class="foot"><b>REVERSE ENGINEERING &amp; RECONSTRUCTION</b><span>lostengines.com/corncob</span></div>
+<script type="module">
+import {corncobModelRenderer as renderer,corncobModelGeometry as geometry,corncobColourProfile as profile,corncobModelColourValues as values,corncobApplyModelColours as colours} from '../src/model-engine.js';
+try {
+ const [retail,early]=await Promise.all(['deluxe_dnk','shareware_1_20'].map(id=>fetch('../public/data/models-'+id+'.json').then(r=>r.json())));
+ const sun=early.runtime_variants.find(o=>o.id==='sun');
+ const items=[
+  ['plane',retail,retail.objects.find(o=>o.type===2),'normal',.8,-.48,1.7],
+  ['crew',retail,retail.objects.find(o=>o.type===7),'gesture',.65,-.15,1.0],
+  ['sun',early,sun,'face',0,1.5,1.75]
+ ];
+ for(const [id,bank,base,pose,yaw,pitch,zoom] of items){
+  const object={...base,...base.states?.find(s=>s.id===pose),states:undefined};
+  const canvas=document.getElementById(id),view=renderer(canvas);
+  if(!view)throw Error('WebGL is required to render the social preview.');
+  const model=geometry(bank,object,0,'ega'),rules=profile(bank,object);
+  if(rules)colours(model,values(rules,0,0,object));
+  canvas.getContext('webgl').clearColor(0,0,0,0);
+  view.draw(model,canvas.width,canvas.height,yaw,pitch,zoom);
+ }
+ await Promise.all([...document.images].map(i=>i.decode()));
+ await document.fonts.ready;
+ window.socialReady=true;
+}catch(error){window.socialError=String(error);throw error;}
+</script>
+</html>

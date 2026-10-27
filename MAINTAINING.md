@@ -43,3 +43,11 @@ Publishing uses GitHub Actions on `master`. Set the repository's Pages build
 source to GitHub Actions. The workflow builds/checks before uploading `dist/`;
 relative navigation and lazy-loaded assets work at the repository subpath.
 The analysis archive has a separate publisher and deployment destination.
+
+The shared social card uses the general **Corncob** title and project URL.
+`python3 scripts/render-social.py` renders `scripts/social-card.html` at 1200×630
+using the original aircraft, crew and early sun geometry, alongside our cockpit
+and atlas captures. It needs Python Playwright and Chromium; if necessary,
+`PLAYWRIGHT_DRIVER_CLI` can point to a matching Playwright Node CLI. Copy the
+resulting `public/images/social-preview.jpg` to the research repository’s
+`tools/publish/corncob-social.jpg` when updating the shared card.
