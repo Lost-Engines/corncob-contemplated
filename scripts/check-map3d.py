@@ -30,6 +30,21 @@ async def main():
    scene.scene.background.copy(scene.materials[0].color);
    const depthBits=scene.renderer.getContext().getParameter(scene.renderer.getContext().DEPTH_BITS);
 
+   // Viewport-dependent precision in a world-sized ground triangle used to
+   // cover the black runway. Compare only runway pixels against no ground.
+   const ground=scene.scene.children.find(c=>c.isMesh&&c.geometry.type==='PlaneGeometry');
+   const groundCanvas=document.createElement('canvas'),groundContext=groundCanvas.getContext('2d',{willReadFrequently:true});
+   for(const g of scene.groups)g.visible=[5,35,36].includes(g.userData.object.type);
+   let groundCases=0;
+   for(const [w,h]of [[912,750],[1039,735],[480,480],[360,550]]){
+    scene.renderer.setSize(w,h,false);scene.camera.aspect=w/h;scene.camera.updateProjectionMatrix();groundCanvas.width=w;groundCanvas.height=h;
+    const pixels=()=>{scene.renderer.render(scene.scene,scene.camera);groundContext.drawImage(scene.renderer.domElement,0,0);return groundContext.getImageData(0,0,w,h).data;};
+    scene.scene.background.copy(scene.materials[11].color);
+    ground.visible=true;const actual=pixels();ground.visible=false;const expected=pixels();ground.visible=true;
+    let lost=0;for(let i=0;i<expected.length;i+=4)if(!expected[i]&&!expected[i+1]&&!expected[i+2]&&(actual[i]||actual[i+1]||actual[i+2]))lost++;
+    if(lost)throw Error('Ground hides runway at '+w+'x'+h+': '+lost+' pixels');groundCases++;
+   }
+   scene.renderer.setSize(512,512,false);scene.camera.aspect=1;scene.camera.updateProjectionMatrix();scene.scene.background.copy(scene.materials[0].color);
    for(const child of scene.scene.children)child.visible=false;
    const image=document.createElement('canvas');image.width=image.height=512;const ctx=image.getContext('2d',{willReadFrequently:true});
    function pixels(){scene.renderer.render(scene.scene,scene.camera);ctx.drawImage(scene.renderer.domElement,0,0);return ctx.getImageData(0,0,512,512).data;}
@@ -72,7 +87,7 @@ async def main():
     if(behind.some((v,i)=>v!==withoutDoor[i]))throw Error('Door visible through rear tower wall');doorCases++;
    }
    if(!doorPixels)throw Error('No visible door pixels tested');
-   scene.dispose();host.remove();return {world:worldId,cases,types,litPixels,depthBits,doorCases,doorPixels,occlusion:'passed'};
+   scene.dispose();host.remove();return {world:worldId,cases,types,litPixels,depthBits,groundCases,doorCases,doorPixels,occlusion:'passed'};
   }''',args.world)
   assert not errors,errors
   if args.output:Path(args.output).write_text(json.dumps(result,indent=2)+'\n')

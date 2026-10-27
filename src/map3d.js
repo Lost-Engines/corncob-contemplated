@@ -56,24 +56,27 @@ export class MapScene {
    }
    this.scene.add(group);this.groups.push(group);if(record.bindings.length)this.colouredObjects.push(record);
   }
-  const size=world.tile_size_cm*8/100000;const ground=new THREE.Mesh(new THREE.PlaneGeometry(size,size),this.materials[2]);ground.position.z=-.0001;this.scene.add(ground);
-  this.position((world.objects.find(o=>o.type===6)||world.objects.find(o=>o.type===2)||world.objects[0]).position_cm);
+  // One ground quad per native tile avoids precision loss across a whole-world triangle.
+  const size=world.tile_size_cm*8/100000;const ground=new THREE.Mesh(new THREE.PlaneGeometry(size,size,8,8),this.decalMaterial(2,THREE.DoubleSide,1));ground.position.z=-.0001;ground.renderOrder=-1;this.scene.add(ground);
+  this.position((world.objects.find(o=>o.type===6)||world.objects.find(o=>o.type===2)||world.objects[0])?.position_cm||[0,0,0]);
   this.updateWorldColours();this.updateModelColours(this.colourTime);
  }
- decalMaterial(index,side){
-  const key=`${index}:${side}`;
+ decalMaterial(index,side,bias=-1){
+  const key=`${index}:${side}:${bias}`;
   if(!this.decals.has(key)){
    const material=this.materials[index].clone();material.color=this.materials[index].color;material.side=side;
    // Stripes and the doorway are coplanar with their supporting surfaces.
+   // The large ground plane needs the opposite bias: shader depth precision
+   // can otherwise cover a runway at some viewport sizes and camera angles.
    // The door faces outward, so it cannot appear through the back of its tower.
    // Apply slope-scaled bias to the final logarithmic depth (with a four-step
    // 24-bit minimum). polygonOffset alone cannot reliably bias shader-written
    // depth; the slope term also covers rasterization error at shallow angles.
    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <logdepthbuf_fragment>',`#include <logdepthbuf_fragment>
 #ifdef USE_LOGARITHMIC_DEPTH_BUFFER
- gl_FragDepth = max(0.0, gl_FragDepth - max(fwidth(gl_FragDepth), 4.0 / 16777216.0));
+ gl_FragDepth = clamp(gl_FragDepth + ${bias.toFixed(1)} * max(fwidth(gl_FragDepth), 4.0 / 16777216.0), 0.0, 1.0);
 #endif`);};
-   material.customProgramCacheKey=()=> 'surface-detail-depth';this.decals.set(key,material);
+   material.customProgramCacheKey=()=> `surface-depth-${bias}`;this.decals.set(key,material);
   }
   return this.decals.get(key);
  }
@@ -116,7 +119,7 @@ export class MapScene {
  position(position){const p=new THREE.Vector3(...position.map(v=>v/100000));this.controls.target.copy(p);this.camera.position.copy(p).add(new THREE.Vector3(.65,-.8,.25).applyAxisAngle(this.camera.up,-3*Math.PI/4));this.controls.update();}
  focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),centre=box.getCenter(new THREE.Vector3()),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(distance*.5,-distance*.8,distance*.45));this.controls.update();this.select(object);}
  select(object){if(this.selection){this.scene.remove(this.selection);this.selection.geometry.dispose();this.selection.material.dispose();}const group=this.groups.find(g=>g.userData.object===object);if(group){this.selection=new THREE.BoxHelper(group,0xffffaa);this.scene.add(this.selection);}}
- overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));const centre=box.getCenter(new THREE.Vector3()),extent=box.getSize(new THREE.Vector3()).length();this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(extent*.35,-extent*.55,extent*.6));this.controls.update();}
+ overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));if(box.isEmpty()){this.position([0,0,0]);return;}const centre=box.getCenter(new THREE.Vector3()),extent=box.getSize(new THREE.Vector3()).length();this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(extent*.35,-extent*.55,extent*.6));this.controls.update();}
  zoom(factor){this.camera.position.sub(this.controls.target).multiplyScalar(factor).add(this.controls.target);this.controls.update();}
  dispose(){this.active(false);this.disposed=true;this.resize.disconnect();this.controls.dispose();document.removeEventListener('visibilitychange',this.visibility);this.host.removeEventListener('pointerdown',this.down);this.host.removeEventListener('pointerup',this.up);this.scene.traverse(o=>o.geometry?.dispose());[...this.materials,...this.lines,...this.sprites,...this.decals.values()].forEach(m=>m.dispose());this.selection?.material.dispose();this.texture.dispose();this.renderer.dispose();this.renderer.forceContextLoss();this.host.replaceChildren();}
 }
