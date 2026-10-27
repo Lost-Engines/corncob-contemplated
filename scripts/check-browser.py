@@ -54,9 +54,14 @@ async def main():
   await page.locator('#missions button').nth(5).click()
   assert 'suspended tofu' in await page.locator('#mission-briefing').inner_text()
   assert 'caps lock' not in await page.locator('#mission-briefing').inner_text()
-  await page.click('#airfield');assert await page.locator('#mission-briefing').is_hidden()
-  assert await page.locator('#missions [aria-pressed=true]').count()==0
+  await page.click('#airfield');assert await page.locator('#mission-briefing').is_visible()
+  assert await page.locator('#missions [aria-pressed=true]').count()==1
+  assert 'start=5' in page.url and 'object=' in page.url
+  await page.reload();await page.wait_for_selector('#mission-briefing',state='visible')
+  assert 'suspended tofu' in await page.locator('#mission-briefing').inner_text()
+  assert await page.locator('#place-model').is_visible()
   await page.select_option('#world','other-iceworld');await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+  assert await page.locator('#mission-briefing').is_hidden()
   await page.locator('#missions button').nth(4).click()
   assert 'no title in the original' in await page.locator('#mission-briefing').inner_text()
   assert "Hornet's Nest" not in await page.locator('#mission-briefing').inner_text()

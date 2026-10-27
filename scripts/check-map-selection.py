@@ -29,10 +29,24 @@ with sync_playwright() as p:
         }''')
         page.select_option('#world','whtsands')
         page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+    if args.analysis:
+        page.select_option('#edition','')
+        page.wait_for_function("document.querySelector('#worldStatus')?.textContent.startsWith('Drag')")
+        page.select_option('#worldSelect','c9b4ea51b23f6c99')
+        page.wait_for_function("document.querySelector('#worldStatus')?.textContent.startsWith('Drag')")
+        page.locator('#starts button').first.click()
+        page.evaluate("window.testScene=document.querySelector('#view').corncobWorldScene")
+    else:
+        page.select_option('#world','other-tundra')
+        page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+        page.locator('#missions button').first.click()
+    briefing='#missionBriefing' if args.analysis else '#mission-briefing'
+    original_briefing=page.locator(briefing).inner_text()
+    assert 'caps lock' in original_briefing
     # Guarantee a release over a selectable object, even while the camera is
     # moving. Only hit-testing is stubbed; pointer input and controls are real.
     page.evaluate('''()=>{
-      testScene.ray.intersectObjects=()=>[{object:testScene.groups[0]}];
+      testScene.ray.intersectObjects=()=>[{object:testScene.groups.find(g=>g.userData.object.index===163)}];
       const replace=history.replaceState.bind(history);window.selections=0;
       history.replaceState=(...args)=>{window.selections++;return replace(...args);};
       document.addEventListener('pointerdown',e=>window.lastPointer=e.pointerId,true);
@@ -49,8 +63,20 @@ with sync_playwright() as p:
             page.locator(canvas).scroll_into_view_if_needed()
             box=page.locator(canvas).bounding_box()
             return box['x']+box['width']/2,box['y']+box['height']/2
-        x,y=centre();page.evaluate('selections=0');page.mouse.click(x,y)
+        x,y=centre();before=page.evaluate('testScene.camera.position.clone().sub(testScene.controls.target).toArray()');page.evaluate('selections=0');page.mouse.click(x,y)
         assert page.evaluate('selections')==1,(mode,'ordinary click')
+        assert page.locator(briefing).is_visible() and page.locator(briefing).inner_text()==original_briefing
+        assert 'start=0' in page.url and 'object=' in page.url
+        assert page.evaluate('''()=>{
+          const s=testScene;s.selection.geometry.computeBoundingBox();
+          const centre=s.selection.geometry.boundingBox.getCenter(s.camera.position.clone());centre.z=0;
+          // The displayed selection box uses Float32 vertices (centimetre tolerance).
+          return s.controls.target.z===0&&s.controls.target.distanceTo(centre)<1e-5;
+        }'''),(mode,'selected object must become the ground pivot')
+        if mode=='3d':
+            after=page.evaluate('testScene.camera.position.clone().sub(testScene.controls.target).toArray()')
+            assert all(abs(a-b)<1e-8 for a,b in zip(before,after)),('pick changed zoom or angle',before,after)
+
         passed=['ordinary click']
         for case in ('returning drag','right button','middle button','modified click','cancel','lost capture','blur','wheel during drag'):
             x,y=centre();page.evaluate('selections=0');page.mouse.move(x,y)
@@ -82,6 +108,8 @@ with sync_playwright() as p:
         x,y=centre();page.evaluate('selections=0');page.touchscreen.tap(x,y)
         assert page.evaluate('selections')==1,(mode,'fresh touch tap')
         passed.append('fresh touch tap')
+        assert page.locator(briefing).is_visible() and page.locator(briefing).inner_text()==original_briefing
+        passed.append('briefing retained and object recentred')
         results[mode]=passed
     assert not errors,errors
     print(json.dumps({'viewer':'analysis' if args.analysis else 'public','gestures':results,'errors':errors},indent=2))

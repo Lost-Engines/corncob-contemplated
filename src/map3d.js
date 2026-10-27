@@ -165,6 +165,9 @@ export class MapScene {
   offset.z=Math.max(.015,start.position_cm[2]/100000,offset.length()*.65,bounds.max.z*1.3);
   this.groundView(bounds,offset);
  }
+ // A pick changes the pivot without imposing the landmark close-up angle or
+ // zoom. groundView only backs away if the object's height needs more room.
+ centreOn(object){const group=this.groups.find(g=>g.userData.object===object),p=new THREE.Vector3(...object.position_cm.map(v=>v/100000));const box=group?new THREE.Box3().setFromObject(group):new THREE.Box3(p.clone(),p.clone());if(box.isEmpty())box.set(p,p);this.groundView(box,this.camera.position.clone().sub(this.controls.target));}
  focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.groundView(box,new THREE.Vector3(distance*.5,-distance*.8,Math.max(distance*.45,box.max.z*1.3)));this.select(object);}
  select(object){if(this.selection){this.scene.remove(this.selection);this.selection.geometry.dispose();this.selection.material.dispose();}const group=this.groups.find(g=>g.userData.object===object);if(group){this.selection=new THREE.BoxHelper(group,0xffffaa);this.scene.add(this.selection);}}
  overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));if(box.isEmpty()){this.position([0,0,0]);return;}const extent=box.getSize(new THREE.Vector3()).length();this.groundView(box,new THREE.Vector3(extent*.35,-extent*.55,Math.max(.015,extent*.6,box.max.z*1.3)));}
