@@ -61,7 +61,7 @@ with sync_playwright() as p:
             checked.append([width,world,index])
     # Regular framing commands must not restore an elevated orbit centre either.
     page.click('#fit');assert page.evaluate('missionScene.controls.target.z')==0
-    page.click('#airfield');assert page.evaluate('missionScene.controls.target.z')==0
+    page.click('#airfield');assert page.evaluate('missionScene.controls.target.z')>0
     assert not errors,errors
     print(json.dumps({'cases':checked,'checks':'Target framing, ground pivots, button/wheel zoom, ground-plane panning, 2D/3D, filters and landmark/world framing passed','errors':errors},indent=2))
     browser.close()

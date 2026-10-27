@@ -92,6 +92,13 @@ loss and multi-touch, with ordinary clicks and taps as positive controls. Add
 `--analysis` and use the full resource-index URL to check the research viewer.
 
 Mission context and object selection are independent: selecting an object retains
-the briefing and its start link. A pick recentres the ground pivot without the
-landmark shortcut's forced close-up. Combined `start`/`object` links restore both;
+the briefing and its start link. A pick recentres the pivot on the object itself,
+including its altitude, without the landmark shortcut's forced close-up. Combined `start`/`object` links restore both;
 a world change clears them. The browser and map-selection checks cover this.
+
+`scripts/check-map-picking.py --url <served-site>/` checks actual geometry hits
+without substituting the raycaster: Overnight Express runway clicks and wheel
+zoom, wireframes at three zoom levels, and transparent sprite corners. It runs
+at two viewport/pixel-density combinations; `--analysis` checks the research
+viewer too. Line picking allows three CSS pixels at each segment's depth, rather
+than Three.js's default one-world-unit tolerance (one kilometre here).

@@ -46,7 +46,7 @@ with sync_playwright() as p:
     # Guarantee a release over a selectable object, even while the camera is
     # moving. Only hit-testing is stubbed; pointer input and controls are real.
     page.evaluate('''()=>{
-      testScene.ray.intersectObjects=()=>[{object:testScene.groups.find(g=>g.userData.object.index===163)}];
+      testScene.ray.intersectObjects=()=>[{object:testScene.groups.find(g=>g.userData.object.index===163),point:testScene.groups.find(g=>g.userData.object.index===163).position}];
       const replace=history.replaceState.bind(history);window.selections=0;
       history.replaceState=(...args)=>{window.selections++;return replace(...args);};
       document.addEventListener('pointerdown',e=>window.lastPointer=e.pointerId,true);
@@ -69,10 +69,10 @@ with sync_playwright() as p:
         assert 'start=0' in page.url and 'object=' in page.url
         assert page.evaluate('''()=>{
           const s=testScene;s.selection.geometry.computeBoundingBox();
-          const centre=s.selection.geometry.boundingBox.getCenter(s.camera.position.clone());centre.z=0;
+          const centre=s.selection.geometry.boundingBox.getCenter(s.camera.position.clone());
           // The displayed selection box uses Float32 vertices (centimetre tolerance).
-          return s.controls.target.z===0&&s.controls.target.distanceTo(centre)<1e-5;
-        }'''),(mode,'selected object must become the ground pivot')
+          return s.controls.target.distanceTo(centre)<1e-5;
+        }'''),(mode,'selected object must become the orbit pivot')
         if mode=='3d':
             after=page.evaluate('testScene.camera.position.clone().sub(testScene.controls.target).toArray()')
             assert all(abs(a-b)<1e-8 for a,b in zip(before,after)),('pick changed zoom or angle',before,after)

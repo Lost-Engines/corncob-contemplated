@@ -39,14 +39,43 @@ export class MapScene {
   this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=true;this.controls.screenSpacePanning=false;this.controls.minDistance=.005;this.controls.maxDistance=400;this.controls.maxPolarAngle=Math.PI*.495;
   this.materials=palette.map(rgb=>new THREE.MeshBasicMaterial({color:new THREE.Color(`rgb(${rgb.join(',')})`),side:THREE.DoubleSide}));
   this.lines=palette.map(rgb=>new THREE.LineBasicMaterial({color:new THREE.Color(`rgb(${rgb.join(',')})`)}));
-  const disk=document.createElement('canvas');disk.width=disk.height=64;const ctx=disk.getContext('2d');ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(32,32,31,0,Math.PI*2);ctx.fill();this.texture=new THREE.CanvasTexture(disk);this.texture.magFilter=THREE.NearestFilter;this.texture.minFilter=THREE.LinearFilter;
+  const disk=document.createElement('canvas');disk.width=disk.height=64;const ctx=disk.getContext('2d');ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(32,32,31,0,Math.PI*2);ctx.fill();this.spriteAlpha=ctx.getImageData(0,0,64,64).data;this.texture=new THREE.CanvasTexture(disk);this.texture.magFilter=THREE.NearestFilter;this.texture.minFilter=THREE.LinearFilter;
   this.sprites=palette.map(rgb=>new THREE.SpriteMaterial({map:this.texture,color:new THREE.Color(`rgb(${rgb.join(',')})`),alphaTest:.5}));
   this.controls.addEventListener('change',()=>this.updateWorldColours());
   this.decals=new Map();this.groups=[];this.colouredObjects=[];this.colourTime=0;this.colourCycling=true;this.lastTime=null;
   this.visibility=()=>{this.lastTime=null;};document.addEventListener('visibilitychange',this.visibility);
   this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
-  this.disposeTap=onPointerTap(this.renderer.domElement,e=>{const r=host.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);const hit=this.ray.intersectObjects(this.groups,true).find(h=>{let n=h.object;while(n&&!n.userData.object)n=n.parent;return n?.visible;});if(hit){let n=hit.object;while(n&&!n.userData.object)n=n.parent;if(n)pick(n.userData.object);}});
+  this.disposeTap=onPointerTap(this.renderer.domElement,e=>{const object=this.objectAt(e.clientX,e.clientY);if(object)pick(object);});
   this.resize=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();});this.resize.observe(host);
+ }
+ // Keep line hits within three CSS pixels of the drawn segment at any zoom.
+ // Three's default threshold is one world unit: a kilometre in this viewer.
+ raycastLine(line,ray,hits){
+  const geometry=line.geometry;if(!geometry.boundingSphere)geometry.computeBoundingSphere();
+  const sphere=geometry.boundingSphere.clone().applyMatrix4(line.matrixWorld);
+  const depth=-sphere.center.applyMatrix4(this.camera.matrixWorldInverse).z+sphere.radius;
+  ray.params.Line.threshold=3*2*Math.tan(this.camera.fov*Math.PI/360)*Math.max(this.camera.near,depth)/(this.camera.zoom*this.renderer.domElement.clientHeight);
+  const candidates=[];THREE.LineSegments.prototype.raycast.call(line,ray,candidates);
+  const r=this.renderer.domElement.getBoundingClientRect();
+  for(const hit of candidates){
+   const p=hit.point.clone().project(this.camera);
+   if(Math.hypot((p.x-this.pointer.x)*r.width/2,(p.y-this.pointer.y)*r.height/2)<=3)hits.push(hit);
+  }
+ }
+ objectAt(x,y){
+  const r=this.renderer.domElement.getBoundingClientRect();if(!r.width||!r.height)return null;
+  this.camera.updateMatrixWorld();this.scene.updateMatrixWorld(true);
+  this.pointer.set((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);
+  for(const hit of this.ray.intersectObjects(this.groups.filter(g=>g.visible),true)){
+   let group=hit.object;while(group&&!group.userData.object)group=group.parent;
+   if(!group?.visible||!hit.object.visible||hit.object.material?.visible===false)continue;
+   const depth=-hit.point.clone().applyMatrix4(this.camera.matrixWorldInverse).z;
+   if(depth<this.camera.near||depth>this.camera.far)continue;
+   // Sprites are circular: the transparent corners of their quads aren't hits.
+   if(hit.object.isSprite){const u=Math.min(63,Math.max(0,Math.floor(hit.uv.x*64))),v=Math.min(63,Math.max(0,Math.floor((1-hit.uv.y)*64)));if(this.spriteAlpha[(v*64+u)*4+3]<128)continue;}
+   return group.userData.object;
+  }
+  return null;
  }
  async world(world,catalog){
   this.worldData=world;this.homingTowers=world.objects.filter(o=>o.type===6&&(o.flags&1)).map(o=>new THREE.Vector3(...o.position_cm.map(v=>v/100000)));const bank=await load(catalog.banks.find(b=>b.id===world.bank).file),native=world.bank==='source_variants'?await load('models-deluxe_dnk.json'):bank;
@@ -73,7 +102,7 @@ export class MapScene {
      const door=object.type===34;
      const mesh=new THREE.Mesh(geo,marking||door?this.decalMaterial(index,door?THREE.FrontSide:THREE.DoubleSide):this.materials[index]);if(marking||door)mesh.renderOrder=1;bind(mesh,primitive.colour,this.materials,marking||door?(door?THREE.FrontSide:THREE.DoubleSide):null);
     }
-    for(const line of primitive.lines||[]){const geo=new THREE.BufferGeometry().setFromPoints(line.segments.flat().map(p=>new THREE.Vector3(...p.map(v=>v/100000))));bind(new THREE.LineSegments(geo,this.lines[colour(line.colour)]),line.colour,this.lines);}
+    for(const line of primitive.lines||[]){const geo=new THREE.BufferGeometry().setFromPoints(line.segments.flat().map(p=>new THREE.Vector3(...p.map(v=>v/100000))));const segments=new THREE.LineSegments(geo,this.lines[colour(line.colour)]);segments.raycast=(ray,hits)=>this.raycastLine(segments,ray,hits);bind(segments,line.colour,this.lines);}
     for(const point of primitive.points||[]){const sprite=new THREE.Sprite(this.sprites[colour(point.colour)]);sprite.position.set(...point.position.map(v=>v/100000));const diameter=Math.max(.00002,(point.diameter||80)/100000);sprite.scale.set(diameter,diameter,1);bind(sprite,point.colour,this.sprites);}
    }
    this.scene.add(group);this.groups.push(group);if(record.bindings.length)this.colouredObjects.push(record);
@@ -138,15 +167,15 @@ export class MapScene {
   this.frame=requestAnimationFrame(this.tick);
  };
  filter(type){for(const group of this.groups)group.visible=!type||String(group.userData.object.type)===type;}
- // Every framing command keeps the orbit/zoom pivot on the ground. Fit the
- // vertical extent as well, so floating installations stay in view without
- // making the wheel converge on an arbitrary point in the air.
- groundView(bounds,offset){
-  const target=bounds.getCenter(new THREE.Vector3());target.z=0;
+ // Mission/world overviews orbit the ground; inspecting an object orbits its
+ // actual centre, so zooming can reach elevated scenery such as the airstrip.
+ groundView(bounds,offset){this.frameView(bounds,offset,true);}
+ frameView(bounds,offset,ground=false){
+  const target=bounds.getCenter(new THREE.Vector3());if(ground)target.z=0;
   const normal=offset.clone().normalize(),right=new THREE.Vector3().crossVectors(this.camera.up,normal).normalize(),up=new THREE.Vector3().crossVectors(normal,right);
   const vertical=Math.tan(this.camera.fov*Math.PI/360)*.82,aspect=this.host.clientWidth/Math.max(1,this.host.clientHeight)||this.camera.aspect;
   let distance=Math.max(offset.length(),this.controls.minDistance);
-  for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [Math.min(0,bounds.min.z),bounds.max.z]){
+  for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [ground?Math.min(0,bounds.min.z):bounds.min.z,bounds.max.z]){
    const point=new THREE.Vector3(x,y,z).sub(target),depth=point.dot(normal);
    distance=Math.max(distance,depth+Math.abs(point.dot(up))/vertical,depth+Math.abs(point.dot(right))/(vertical*aspect),depth+this.camera.near*2);
   }
@@ -165,10 +194,10 @@ export class MapScene {
   offset.z=Math.max(.015,start.position_cm[2]/100000,offset.length()*.65,bounds.max.z*1.3);
   this.groundView(bounds,offset);
  }
- // A pick changes the pivot without imposing the landmark close-up angle or
- // zoom. groundView only backs away if the object's height needs more room.
- centreOn(object){const group=this.groups.find(g=>g.userData.object===object),p=new THREE.Vector3(...object.position_cm.map(v=>v/100000));const box=group?new THREE.Box3().setFromObject(group):new THREE.Box3(p.clone(),p.clone());if(box.isEmpty())box.set(p,p);this.groundView(box,this.camera.position.clone().sub(this.controls.target));}
- focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.groundView(box,new THREE.Vector3(distance*.5,-distance*.8,Math.max(distance*.45,box.max.z*1.3)));this.select(object);}
+ // A pick keeps the viewing angle and distance, moving the orbit centre onto
+ // the object. Only back away if its own bounds need more room.
+ centreOn(object){const group=this.groups.find(g=>g.userData.object===object),p=new THREE.Vector3(...object.position_cm.map(v=>v/100000));const box=group?new THREE.Box3().setFromObject(group):new THREE.Box3(p.clone(),p.clone());if(box.isEmpty())box.set(p,p);this.frameView(box,this.camera.position.clone().sub(this.controls.target));}
+ focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.frameView(box,new THREE.Vector3(distance*.5,-distance*.8,distance*.45));this.select(object);}
  select(object){if(this.selection){this.scene.remove(this.selection);this.selection.geometry.dispose();this.selection.material.dispose();}const group=this.groups.find(g=>g.userData.object===object);if(group){this.selection=new THREE.BoxHelper(group,0xffffaa);this.scene.add(this.selection);}}
  overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));if(box.isEmpty()){this.position([0,0,0]);return;}const extent=box.getSize(new THREE.Vector3()).length();this.groundView(box,new THREE.Vector3(extent*.35,-extent*.55,Math.max(.015,extent*.6,box.max.z*1.3)));}
  zoom(factor){this.camera.position.sub(this.controls.target).multiplyScalar(factor).add(this.controls.target);this.controls.update();}
