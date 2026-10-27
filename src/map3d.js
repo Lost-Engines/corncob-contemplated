@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {load,entries} from './data.js';
+import {worldColours} from './world-colours.js';
 import {corncobEgaPalette as palette,corncobModelColourValues as colourValues,corncobColourProfile as colourProfile} from './model-engine.js';
 export class MapScene {
  constructor(host,pick){
@@ -12,6 +13,7 @@ export class MapScene {
   this.lines=palette.map(rgb=>new THREE.LineBasicMaterial({color:new THREE.Color(`rgb(${rgb.join(',')})`)}));
   const disk=document.createElement('canvas');disk.width=disk.height=64;const ctx=disk.getContext('2d');ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(32,32,31,0,Math.PI*2);ctx.fill();this.texture=new THREE.CanvasTexture(disk);this.texture.magFilter=THREE.NearestFilter;this.texture.minFilter=THREE.LinearFilter;
   this.sprites=palette.map(rgb=>new THREE.SpriteMaterial({map:this.texture,color:new THREE.Color(`rgb(${rgb.join(',')})`),alphaTest:.5}));
+  this.controls.addEventListener('change',()=>this.updateWorldColours());
   this.groups=[];this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();let origin;
   host.addEventListener('pointerdown',this.down=e=>origin=[e.clientX,e.clientY]);host.addEventListener('pointerup',this.up=e=>{if(!origin||Math.hypot(e.clientX-origin[0],e.clientY-origin[1])>5)return;const r=host.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);const hit=this.ray.intersectObjects(this.groups,true).find(h=>{let n=h.object;while(n&&!n.userData.object)n=n.parent;return n?.visible;});if(hit){let n=hit.object;while(n&&!n.userData.object)n=n.parent;if(n)pick(n.userData.object);}});
   this.resize=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();});this.resize.observe(host);
@@ -36,6 +38,17 @@ export class MapScene {
   }
   const size=world.tile_size_cm*8/100000;const ground=new THREE.Mesh(new THREE.PlaneGeometry(size,size),this.materials[2]);ground.position.z=-.0001;this.scene.add(ground);
   this.position((world.objects.find(o=>o.type===6)||world.objects.find(o=>o.type===2)||world.objects[0]).position_cm);
+  this.updateWorldColours();
+ }
+ updateWorldColours(){
+  if(!this.worldData)return;
+  const colours=worldColours(this.worldData,[this.camera.position.x*100000,this.camera.position.y*100000]);
+  const key=[...colours.ground,...colours.sky].join(',');if(key===this.colourKey)return;this.colourKey=key;
+  for(const [index,rgb] of [[2,colours.ground],[11,colours.sky]]){
+   const colour=new THREE.Color(`rgb(${rgb.join(',')})`);
+   for(const materials of [this.materials,this.lines,this.sprites])materials[index].color.copy(colour);
+  }
+  this.scene.background.copy(this.materials[11].color);this.renderer.setClearColor(this.materials[11].color);
  }
  active(value){if(this.disposed)return;this.running=value;if(value&&!this.frame)this.tick();else if(!value&&this.frame){cancelAnimationFrame(this.frame);this.frame=0;}}
  tick=()=>{this.frame=0;if(!this.running)return;this.controls.update();this.renderer.render(this.scene,this.camera);this.frame=requestAnimationFrame(this.tick);};

@@ -27,7 +27,11 @@ saved pilots. `content/data-provenance.json` records the originating index hash
 and scope. The adapted renderer in `src/model-engine.js` comes from our research
 viewer in `corncob-reverse/tools/model_viewer.js`; refresh it deliberately when
 fixing model interpretation. Models retain authored painter lists; the optional
-3D atlas uses modern depth testing and simplified scenery colours. Model coordinates
+3D atlas uses modern depth testing. `src/world-colours.js` unpacks the original
+five-byte colour field in each tile header and replaces palette entries 2
+(ground) and 11 (sky), including model surfaces using those entries. The camera
+position selects the tile; generated layouts and zero colour fields retain the
+default palette. Model coordinates
 are in two-centimetre units; world placement coordinates are centimetres. The
 atlas scales local geometry by two, preserving contiguous runway pieces.
 
