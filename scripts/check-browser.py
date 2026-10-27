@@ -31,6 +31,10 @@ async def main():
   await page.select_option('#category','people');await page.fill('#search','crew');assert await page.locator('.model-tile').count()==1
   await page.fill('#search','');await page.select_option('#category','');await page.click('#next');assert await page.locator('#previous').is_enabled();await page.click('#previous')
   await page.goto(args.url+'atlas/');await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+  assert await page.locator('#map3d canvas').is_visible()
+  await page.click('#view-2d');assert 'view=2d' in page.url
+  await page.reload();await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+  assert await page.locator('#map-canvas').is_visible()
   worlds=await page.locator('#world option').evaluate_all('(items)=>items.map(x=>x.value)')
   for world in worlds:
    await page.select_option('#world',world);await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'");assert 'could not' not in (await page.locator('#map-status').inner_text());result['worlds']+=1

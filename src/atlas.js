@@ -1,6 +1,6 @@
 import {$,load,options,escape,permalink} from './data.js';
 const query=new URLSearchParams(location.search),canvas=$('map-canvas'),ctx=canvas.getContext('2d');
-let catalog,world,selected=null,scene=null,mode='2d',token=0,ready=false;
+let catalog,world,selected=null,scene=null,mode=query.get('view')==='2d'?'2d':'3d',token=0,ready=false;
 let camera={x:0,y:0,scale:1},pointers=new Map(),gesture=null;
 const colours={0:'#ffcf6d',1:'#e9a1f3',2:'#89adff',6:'#faf2cd',7:'#d99a55',11:'#e67977',12:'#d3b58f',13:'#e67977',23:'#e67977',24:'#a1b2f5',27:'#d0c783',31:'#617466',48:'#e8e8de',50:'#f696db',51:'#ec91cb',52:'#d8b4f6',53:'#ffbf66',57:'#a5d9ae',58:'#91e9d5'};
 const visible=()=>world.objects.filter(o=>!$('type').value||String(o.type)===$('type').value);
@@ -34,7 +34,7 @@ function inspect(object,focus=false){
  const model=object.model_id||String(object.type),bank=world.bank==='source_variants'&&!model.startsWith('source-')?'deluxe_dnk':world.bank;
  $('place-model').href=`../models/?bank=${encodeURIComponent(bank)}&model=${encodeURIComponent(model)}`;$('place-model').hidden=false;
  if(focus){$('type').value='';camera.x=p[0];camera.y=p[1];camera.scale=Math.max(camera.scale,.001);scene?.filter('');scene?.focus(object);}
- scene?.select(object);permalink({world:world.id,object:object.index,view:mode==='3d'?'3d':null});draw();
+ scene?.select(object);permalink({world:world.id,object:object.index,view:mode});draw();
 }
 async function view(next){
  mode=next;$('view-2d').setAttribute('aria-pressed',String(mode==='2d'));$('view-3d').setAttribute('aria-pressed',String(mode==='3d'));
@@ -42,7 +42,7 @@ async function view(next){
  if(mode==='3d'){
   try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
  }else{scene?.active(false);draw();}
- permalink({world:world.id,object:selected?.index,view:mode==='3d'?'3d':null});
+ permalink({world:world.id,object:selected?.index,view:mode});
  if(mode==='3d')status('Static placements and original shapes in a modern 3D view. Drag to orbit · right-drag to pan · scroll to zoom.');
  else status(`${world.objects.length} stored placements · ${world.starts.length} mission starts. Drag to pan · scroll or pinch to zoom · select a dot.`);
 }
@@ -59,7 +59,7 @@ async function change(){
   $('missions').replaceChildren();for(const s of world.starts){const button=document.createElement('button');button.textContent=s.name;button.onclick=()=>{camera.x=s.position_cm[0];camera.y=s.position_cm[1];camera.scale=Math.max(camera.scale,.00025);draw();scene?.position(s.position_cm);$('mission-note').textContent='Recorded starting position for this briefing; selecting it does not run the mission.';};$('missions').append(button);}
   if(!world.starts.length)$('missions').textContent=world.slalom?'A six-crossing course, recovered from the source. The two rows are at different heights.':'No named starting positions are stored for this definition.';
   fit();if(!ready&&query.get('object'))selected=world.objects.find(o=>String(o.index)===query.get('object'));
-  await view(!ready&&query.get('view')==='3d'?'3d':mode);if(selected)inspect(selected,true);ready=true;
+  await view(mode);if(selected)inspect(selected,true);ready=true;
  }catch(e){status(e.message);}finally{if(request===token)$('atlas-stage').setAttribute('aria-busy','false');}
 }
 async function start(){
