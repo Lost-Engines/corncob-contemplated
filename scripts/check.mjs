@@ -3,6 +3,8 @@ import {readdir,readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {worldColours} from '../src/world-colours.js';
+import {placementRotation} from '../src/map3d.js';
+import {Vector3} from 'three';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist'),errors=[];
 async function files(dir){const result=[];for(const e of await readdir(dir,{withFileTypes:true})){const p=path.join(dir,e.name);result.push(...e.isDirectory()?await files(p):[p]);}return result;}
@@ -37,5 +39,16 @@ const boundary=[mixed.origin_cm+mixed.tile_size_cm,mixed.origin_cm+2*mixed.tile_
 assert.deepEqual(worldColours(mixed,boundary),{ground:[60,65,0],sky:[48,52,97]});
 assert.deepEqual(worldColours(mixed,[boundary[0]-1,boundary[1]]),{ground:[239,251,211],sky:[60,32,247]});
 assert.deepEqual(worldColours(mixed,[-1e10,1e10]),{ground:[239,251,211],sky:[60,32,247]});
+// Both Atkinsville aircraft have the same gentle tail-down pitch. Only their
+// headings differ: the spare is parked diagonally, not tipped 45 degrees up.
+const atkinsville=await read('world-morning.json');
+const parked=atkinsville.objects.filter(o=>o.type===2);
+assert.equal(parked.length,2);
+for(const object of parked){
+ const forward=new Vector3(1,0,0).applyEuler(placementRotation(object));
+ assert.ok(Math.abs(forward.z-0.14673047445536175)<1e-12);
+ if(object.index===173)assert.ok(Math.abs(forward.x+forward.y)<1e-12&&forward.x>0&&forward.y<0);
+}
+assert.deepEqual(placementRotation({angles_u16:[57344,64000,0]}).toArray(),placementRotation(parked[1]).toArray());
 if(errors.length)throw Error([...new Set(errors)].join('\n'));
 console.log(`Checked ${list.length} publishing files, ${links} local links, ${catalog.banks.length} model collections and ${catalog.worlds.length} worlds.`);

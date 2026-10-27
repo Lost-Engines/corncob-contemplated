@@ -33,7 +33,13 @@ five-byte colour field in each tile header and replaces palette entries 2
 position selects the tile; generated layouts and zero colour fields retain the
 default palette. Model coordinates
 are in two-centimetre units; world placement coordinates are centimetres. The
-atlas scales local geometry by two, preserving contiguous runway pieces.
+atlas scales local geometry by two, preserving contiguous runway pieces. Placement
+angles are heading, pitch, roll; the renderer applies the original body-to-world
+rotation order. Coplanar runway markings retain depth testing with a small bias
+after logarithmic depth calculation, keeping their stripes above the runway
+without drawing through aircraft. `scripts/check-map3d.py --url <served-site>/`
+checks runway markings over 216 camera angles/distances and verifies foreground
+occlusion; it uses the same optional Playwright setup as `check-browser.py`.
 
 - `content/investigation.md`: the illustrated article.
 - `content/research-sources.md`: claim-to-evidence pointers.
