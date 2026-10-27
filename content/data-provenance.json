@@ -1,6 +1,6 @@
 {
   "source": "https://github.com/Lost-Engines/corncob-reverse",
-  "analysis_index_sha256": "17e5273672bd0718049f93f754b20104120b36185ea117669dfb7701b387e64b",
+  "analysis_index_sha256": "ccaccb4695419609c7c9fefaccaa749c46fa82ced7178f0e1d8d72ef9fd1d3a0",
   "scope": "Selected original world definitions and training/source experiments; three executable model banks and source-only appearances. Saved pilots and installations are not part of this public snapshot.",
   "banks": [
     {

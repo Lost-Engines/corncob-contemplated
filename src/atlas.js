@@ -1,6 +1,6 @@
 import {$,load,options,escape,permalink} from './data.js';
 const query=new URLSearchParams(location.search),canvas=$('map-canvas'),ctx=canvas.getContext('2d');
-let catalog,world,selected=null,scene=null,mode=query.get('view')==='2d'?'2d':'3d',token=0,ready=false;
+let catalog,world,selected=null,selectedStart=null,scene=null,mode=query.get('view')==='2d'?'2d':'3d',token=0,ready=false;
 let camera={x:0,y:0,scale:1},pointers=new Map(),gesture=null;
 const colours={0:'#ffcf6d',1:'#e9a1f3',2:'#89adff',6:'#faf2cd',7:'#d99a55',11:'#e67977',12:'#d3b58f',13:'#e67977',23:'#e67977',24:'#a1b2f5',27:'#d0c783',31:'#617466',48:'#e8e8de',50:'#f696db',51:'#ec91cb',52:'#d8b4f6',53:'#ffbf66',57:'#a5d9ae',58:'#91e9d5'};
 const visible=()=>world.objects.filter(o=>!$('type').value||String(o.type)===$('type').value);
@@ -28,39 +28,52 @@ function draw(){
  ctx.strokeStyle='#b9d5c4';ctx.beginPath();ctx.moveTo(20,height-30);ctx.lineTo(20+pixels,height-30);ctx.stroke();ctx.fillStyle='#b9d5c4';ctx.font='12px system-ui';ctx.fillText(km<1?`${Math.round(km*1000)} m`:`${km} km`,20,height-38);ctx.fillText('+Y ↑  ·  +X →',width-130,height-18);
 }
 function inspect(object,focus=false){
- if(!object)return;selected=object;
+ if(!object)return;selected=object;selectedStart=null;$('mission-briefing').hidden=true;for(const b of $('missions').querySelectorAll('button'))b.setAttribute('aria-pressed','false');
  $('place-name').textContent=object.name;$('place-note').textContent=object.objective?.rule||'A stored placement in the original world. Live motion, spawning and mission progress are not simulated here.';
  const p=object.position_cm;$('place-position').textContent=`X ${(p[0]/100000).toFixed(2)} km · Y ${(p[1]/100000).toFixed(2)} km · height ${(p[2]/100).toFixed(0)} m`;
  const model=object.model_id||String(object.type),bank=world.bank==='source_variants'&&!model.startsWith('source-')?'deluxe_dnk':world.bank;
  $('place-model').href=`../models/?bank=${encodeURIComponent(bank)}&model=${encodeURIComponent(model)}`;$('place-model').hidden=false;
  if(focus){$('type').value='';camera.x=p[0];camera.y=p[1];camera.scale=Math.max(camera.scale,.001);scene?.filter('');scene?.focus(object);}
- scene?.select(object);permalink({world:world.id,object:object.index,view:mode});draw();
+ scene?.select(object);permalink({world:world.id,object:object.index,view:mode,start:selectedStart});draw();
+}
+function chooseStart(index){
+ const mission=world.starts[index];if(!mission)return;
+ selected=null;selectedStart=index;scene?.select(null);camera.x=mission.position_cm[0];camera.y=mission.position_cm[1];camera.scale=Math.max(camera.scale,.00025);draw();scene?.position(mission.position_cm);
+ $('place-name').textContent=mission.name;$('place-note').textContent='Recorded mission starting position';$('place-position').textContent=`X ${(mission.position_cm[0]/100000).toFixed(2)} km · Y ${(mission.position_cm[1]/100000).toFixed(2)} km · height ${(mission.position_cm[2]/100).toFixed(0)} m`;$('place-model').hidden=true;
+ $('mission-note').textContent='Original briefing; selecting this start does not run the mission.';
+ const host=$('mission-briefing');host.replaceChildren();host.hidden=false;
+ const title=document.createElement('h3');title.textContent=mission.name;host.append(title);
+ const meta=document.createElement('p');meta.className='mission-meta';meta.textContent=['direction','distance','difficulty'].filter(k=>mission[k]).map(k=>`${k[0].toUpperCase()+k.slice(1)}: ${mission[k]}`).join(' · ');host.append(meta);
+ if(mission.named===false){const note=document.createElement('p');note.className='mission-meta';note.textContent='This mission has no title in the original briefing.';host.append(note);}
+ for(const paragraph of (mission.briefing||'No separate briefing text is recorded for this starting position.').split(/\n\s*\n/)){const p=document.createElement('p');p.textContent=paragraph.replace(/\s*\n\s*/g,' ');host.append(p);}
+ for(const b of $('missions').querySelectorAll('button'))b.setAttribute('aria-pressed',String(Number(b.dataset.start)===index));
+ permalink({world:world.id,view:mode,start:index});
 }
 async function view(next){
  mode=next;$('view-2d').setAttribute('aria-pressed',String(mode==='2d'));$('view-3d').setAttribute('aria-pressed',String(mode==='3d'));
  canvas.hidden=mode!=='2d';$('map3d').hidden=mode!=='3d';
  if(mode==='3d'){
-  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));scene.setColourCycling($('cycle-colours').checked);await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
+  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));scene.setColourCycling($('cycle-colours').checked);await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);else if(selectedStart!==null)scene.position(world.starts[selectedStart].position_cm);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
  }else{scene?.active(false);draw();}
- $('cycle-colours').disabled=mode!=='3d';
- permalink({world:world.id,object:selected?.index,view:mode});
+ $('cycle-colours').disabled=mode!=='3d';$('objectives').disabled=mode!=='2d';$('objectives').title=mode==='2d'?'Show objective rings and mission-start crosses on the atlas.':'These markers are available in the 2D atlas.';
+ permalink({world:world.id,object:selected?.index,view:mode,start:selectedStart});
  if(mode==='3d')status('Static placements and original shapes in a modern 3D view. Drag to orbit · right-drag to pan · scroll to zoom.');
  else status(`${world.objects.length} stored placements · ${world.starts.length} mission starts. Drag to pan · scroll or pinch to zoom · select a dot.`);
 }
 async function change(){
- const request=++token;$('atlas-stage').setAttribute('aria-busy','true');status('Loading world…');scene?.dispose();scene=null;selected=null;
+ const request=++token;$('atlas-stage').setAttribute('aria-busy','true');status('Loading world…');scene?.dispose();scene=null;selected=null;selectedStart=null;
  try{
   const value=await load(catalog.worlds.find(w=>w.id===$('world').value).file);if(request!==token)return;world=value;
   $('world-name').textContent=world.name;$('world-intro').textContent=world.introduction||'A generated arrangement reconstructed from the original placement rules.';
-  $('place-name').textContent='Pick something on the map';$('place-note').textContent='Try an aircraft, a ground crew member or a generator orb. Mission starts are marked with crosses.';$('place-position').textContent='';$('place-model').hidden=true;
+  $('place-name').textContent='Pick something on the map';$('place-note').textContent='Try an aircraft, a ground crew member or a generator orb. Mission starts are marked with crosses in the 2D atlas.';$('place-position').textContent='';$('place-model').hidden=true;$('mission-briefing').hidden=true;$('mission-note').textContent='';
   const counts=new Map();for(const o of world.objects)counts.set(o.type,(counts.get(o.type)||0)+1);
   options($('type'),[['','All objects'],...[...counts.keys()].sort((a,b)=>a-b).map(t=>[String(t),`${world.type_names?.[t]||catalog.types[t].name} (${counts.get(t)})`])]);
   const landmarks=world.objects.filter(o=>[0,1,2,6,7,48,58].includes(o.type));
   options($('landmark'),[['','Visit a landmark…'],...landmarks.map(o=>[String(o.index),`${o.name} · ${o.index+1}`])]);
-  $('missions').replaceChildren();for(const s of world.starts){const button=document.createElement('button');button.textContent=s.name;button.onclick=()=>{camera.x=s.position_cm[0];camera.y=s.position_cm[1];camera.scale=Math.max(camera.scale,.00025);draw();scene?.position(s.position_cm);$('mission-note').textContent='Recorded starting position for this briefing; selecting it does not run the mission.';};$('missions').append(button);}
+  $('missions').replaceChildren();for(const [index,mission] of world.starts.entries()){const button=document.createElement('button');button.textContent=mission.name;button.dataset.start=index;button.setAttribute('aria-pressed','false');button.onclick=()=>chooseStart(index);$('missions').append(button);}
   if(!world.starts.length)$('missions').textContent=world.slalom?'A six-crossing course, recovered from the source. The two rows are at different heights.':'No named starting positions are stored for this definition.';
   fit();if(!ready&&query.get('object'))selected=world.objects.find(o=>String(o.index)===query.get('object'));
-  await view(mode);if(selected)inspect(selected,true);ready=true;
+  await view(mode);if(!ready&&query.has('start')&&/^\d+$/.test(query.get('start'))&&world.starts[Number(query.get('start'))])chooseStart(Number(query.get('start')));else if(selected)inspect(selected,true);ready=true;
  }catch(e){status(e.message);}finally{if(request===token)$('atlas-stage').setAttribute('aria-busy','false');}
 }
 async function start(){

@@ -44,11 +44,28 @@ async def main():
   assert await page.locator('#map-canvas').evaluate('(c)=>c.width>0&&c.height>0')
   await page.select_option('#world','other-flatland');await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'");await page.click('#view-3d');await page.wait_for_selector('#map3d canvas');await page.wait_for_timeout(300)
   result['three_dimensional_worlds']=['whtsands','slalom','other-flatland']
+  await page.goto(args.url+'atlas/?world=other-tundra&start=0&view=2d')
+  await page.wait_for_selector('#mission-briefing',state='visible')
+  assert 'caps lock' in await page.locator('#mission-briefing').inner_text()
+  assert await page.locator('#objectives').is_enabled()
+  await page.click('#view-3d');await page.wait_for_function("document.querySelector('#objectives').disabled")
+  await page.reload();await page.wait_for_selector('#mission-briefing',state='visible')
+  assert 'Radio Ace' in await page.locator('#mission-briefing').inner_text()
+  await page.locator('#missions button').nth(5).click()
+  assert 'suspended tofu' in await page.locator('#mission-briefing').inner_text()
+  assert 'caps lock' not in await page.locator('#mission-briefing').inner_text()
+  await page.click('#airfield');assert await page.locator('#mission-briefing').is_hidden()
+  assert await page.locator('#missions [aria-pressed=true]').count()==0
+  await page.select_option('#world','other-iceworld');await page.wait_for_function("document.querySelector('#atlas-stage').getAttribute('aria-busy')==='false'")
+  await page.locator('#missions button').nth(4).click()
+  assert 'no title in the original' in await page.locator('#mission-briefing').inner_text()
+  assert "Hornet's Nest" not in await page.locator('#mission-briefing').inner_text()
+  result['mission_briefings']=True
   await page.goto(args.url+'music/');assert await page.locator('audio').count()==6;assert await page.locator('audio').evaluate_all('(items)=>items.every(a=>a.paused)')
   await page.locator('audio').nth(0).evaluate('(a)=>a.play()');await page.wait_for_timeout(300);await page.locator('audio').nth(1).evaluate('(a)=>a.play()');assert await page.locator('audio').nth(0).evaluate('(a)=>a.paused');assert await page.locator('audio').nth(1).evaluate('(a)=>a.currentTime>=0&&!a.paused');result['audio_playback_and_exclusion']=True
   mobile=await browser.new_page(viewport={'width':390,'height':844},color_scheme='dark',is_mobile=True,has_touch=True)
   mobile.on('pageerror',lambda e:result['console_errors'].append(str(e)))
-  for route in ['', 'story/', 'models/', 'atlas/', 'music/']:
+  for route in ['', 'story/', 'models/', 'atlas/', 'atlas/?world=other-tundra&start=0', 'music/']:
    await mobile.goto(args.url+route);await mobile.wait_for_timeout(300)
    assert await mobile.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),f'Mobile overflow on {route}'
    result['mobile_pages'].append(route or 'home')

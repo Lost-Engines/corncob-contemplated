@@ -28,7 +28,7 @@ Corncob's installation is a collection of programs. The main menu, the flight en
 
 The flight executable, `3.EXE`, also contains most of the 3D artwork. We found 61 object templates pointing to models assembled from polygons, lines and discs. A single template can select different detail levels, change its appearance or be replaced during play. Sixty-one templates does not mean sixty-one completely separate shapes.
 
-The world files do a different job. They place objects, with positions, orientation, flags and parameters, across a grid of tiles. Companion briefing files describe the local conditions and mission starting positions. The [atlas](../atlas/) brings those placements and starts together; selecting a dot opens the corresponding model.
+The world files do a different job. They place objects, with positions, orientation, flags and parameters, across a grid of tiles. Companion briefing files describe the local conditions and mission starting positions. The [atlas](../atlas/) brings those placements and starts together; selecting an object shows its details and a link to the corresponding model. Selecting a mission start opens its original briefing.
 
 <figure><img src="../images/pipeline.svg" alt="World files supply placements and mission starts. The flight executable supplies model templates, drawing lists and behaviour. Our atlas and gallery assemble those recovered definitions for inspection." width="1100" height="430"><figcaption>The useful separation: world files tell us where things are; the executable tells us what they look like and how they behave.</figcaption></figure>
 
@@ -83,6 +83,18 @@ Its flight model has a shortcut to match. The experimental variant changes the p
 The cockpit remains shared, including the propeller that appears at low throttle. We had noticed the propeller before finding the arithmetic, and it was pleasing to discover that the implementation was just as straightforward as it looked.
 
 <figure><img src="../images/aircraft.webp" alt="The black flying-wing model used for the experimental aircraft at White Sands." width="1200" height="750"><figcaption>The experimental aircraft. The extra speed is in the movement calculation. <a href="../models/?model=experimental-aircraft">Inspect the model →</a></figcaption></figure>
+
+## A briefing officer with range
+
+The mission starts turned out to be worth reading in their own right. Wasteland offers **Cuckoo’s Nest**, **Hanging Fruit** and **The Halls of Malevolence**. That last one tells us the aliens have a nice setup and that the brass would like us to help them “redecorate”. Bring the walls down, then get out before the KLAs arrive. [The briefing is in the atlas](../atlas/?world=wastelnd&start=3).
+
+Other Worlds takes this further. Tundra’s [**Radio Ace (Mother of all remote control missions)**](../atlas/?world=other-tundra&start=0) gives the remote-control feature an entire job to do. The aliens have captured an airstrip full of aircraft. We are told to land, steal them, taxi each into position, get out, walk to a platform and fly them remotely into the generator orbs, one at a time. This is an actual mission plan.
+
+Nearby, **Icarus** puts three orbs at 34,000 feet in an attempt to escape our flight ceiling. [**Suspended Insanity**](../atlas/?world=other-tundra&start=3) requires an assassin bomb planted on foot beside a floating airstrip. And then there is [**Michael get your bush down**](../atlas/?world=other-tundra&start=5), whose briefing begins: “Some suspended tofu is causing havoc with our communications.” We have no explanation for Michael. We do have orders to destroy the TRFRU.
+
+Ice World has **Valmart Airstrip and Family Value Center** and **Sweetly Bending Oak Aircraft Park**. Its [**Speed Racer**](../atlas/?world=other-iceworld&start=5) briefing calls the enemy ground vehicles “shopping carts”. We had been calling them that ourselves while playing. It was rather nice to find the briefing officer agreed.
+
+Recovering these names also caught a small extraction mistake: some files use “Mission:” where others use “Mission Code Name:”. Our first pass missed the shorter form. One Ice World start really does have no title, so we leave it labelled as unnamed. The briefings already supply enough odd names without us inventing more.
 
 ## Waiting changes the odds
 
