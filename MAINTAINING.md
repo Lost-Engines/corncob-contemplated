@@ -42,6 +42,18 @@ checks Training Ground’s runway markings over 216 camera angles/distances,
 door visibility from both sides and foreground occlusion (`--world morning`
 checks Atkinsville); it uses the same optional Playwright setup as `check-browser.py`.
 
+The world viewer uses the same recovered colour rules as the model gallery:
+30 preview frames per second for shared random and alternating colours, and the
+original PIT rate for timer-bit flashes. Each placement supplies its own flags
+and quality/paint row. The camera's distance from the towers controls homing-dish
+flashing. Native models in the source-only slalom world keep their native colour
+profile. Material bindings change per object; the world palette remains shared.
+**Cycle colours** freezes the current phase, and hidden tabs / the 2D view pause
+the clock. Reduced-motion preferences start the viewer with cycling paused.
+`scripts/check-map-colours.py --url <served-site>/` verifies native and source
+colour bindings, actual rendered animation, placed flags, paint variants,
+radar range and pause/resume behaviour.
+
 - `content/investigation.md`: the illustrated article.
 - `content/research-sources.md`: claim-to-evidence pointers.
 - `src/pages.mjs`: editorial page layouts and labels.

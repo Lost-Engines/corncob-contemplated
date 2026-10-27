@@ -40,8 +40,9 @@ async function view(next){
  mode=next;$('view-2d').setAttribute('aria-pressed',String(mode==='2d'));$('view-3d').setAttribute('aria-pressed',String(mode==='3d'));
  canvas.hidden=mode!=='2d';$('map3d').hidden=mode!=='3d';
  if(mode==='3d'){
-  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
+  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));scene.setColourCycling($('cycle-colours').checked);await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
  }else{scene?.active(false);draw();}
+ $('cycle-colours').disabled=mode!=='3d';
  permalink({world:world.id,object:selected?.index,view:mode});
  if(mode==='3d')status('Static placements and original shapes in a modern 3D view. Drag to orbit · right-drag to pan · scroll to zoom.');
  else status(`${world.objects.length} stored placements · ${world.starts.length} mission starts. Drag to pan · scroll or pinch to zoom · select a dot.`);
@@ -63,6 +64,8 @@ async function change(){
  }catch(e){status(e.message);}finally{if(request===token)$('atlas-stage').setAttribute('aria-busy','false');}
 }
 async function start(){
+ $('cycle-colours').checked=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ $('cycle-colours').onchange=()=>scene?.setColourCycling($('cycle-colours').checked);
  catalog=await load('catalog.json');$('world').replaceChildren();for(const group of [...new Set(catalog.worlds.map(w=>w.group))]){const opt=document.createElement('optgroup');opt.label=group;for(const w of catalog.worlds.filter(w=>w.group===group))opt.append(new Option(w.name,w.id));$('world').append(opt);}
  $('world').value=catalog.worlds.some(w=>w.id===query.get('world'))?query.get('world'):'training';$('world').onchange=change;
  $('view-2d').onclick=()=>view('2d');$('view-3d').onclick=()=>view('3d');$('type').onchange=()=>{draw();scene?.filter($('type').value);};$('objectives').onchange=draw;
