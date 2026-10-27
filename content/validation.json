@@ -1,0 +1,24 @@
+{
+  "model_collections": {
+    "deluxe_dnk": 63,
+    "other_worlds_download": 63,
+    "shareware_1_20": 71,
+    "source_variants": 6
+  },
+  "worlds": 22,
+  "mobile_pages": [
+    "home",
+    "story/",
+    "models/",
+    "atlas/",
+    "music/"
+  ],
+  "console_errors": [],
+  "three_dimensional_worlds": [
+    "whtsands",
+    "slalom",
+    "other-flatland"
+  ],
+  "audio_playback_and_exclusion": true,
+  "webgl_fallback": true
+}

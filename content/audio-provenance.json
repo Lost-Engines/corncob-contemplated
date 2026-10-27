@@ -1,0 +1,56 @@
+[
+  {
+    "name": "destiny3",
+    "file": "audio/destiny3.mp3",
+    "input": "analysis/resources/audio/destiny3-c95a84ee.flac",
+    "input_sha256": "b2eb405ecec68124ad5b85b083530c949bb3b07267747f6daf50e7153d42a515",
+    "seconds": 84.834,
+    "method": "Original MOAG/Ad Lib V1.51 register capture + pinned Nuked OPL3 (OPL2)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  },
+  {
+    "name": "ridingt",
+    "file": "audio/ridingt.mp3",
+    "input": "analysis/resources/audio/ridingt-c95a84ee.flac",
+    "input_sha256": "a14f234e45e05f3e0f0a929114e700f857ad734a4e4157283f257e8855c2e431",
+    "seconds": 204.155,
+    "method": "Original MOAG/Ad Lib V1.51 register capture + pinned Nuked OPL3 (OPL2)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  },
+  {
+    "name": "dreamso2",
+    "file": "audio/dreamso2.mp3",
+    "input": "analysis/resources/audio/dreamso2-c95a84ee.flac",
+    "input_sha256": "f85cf053ccc29dbd3d07c72b03769935aa67f432c2336b35fa9a0c291cff2dd2",
+    "seconds": 178.795,
+    "method": "Original MOAG/Ad Lib V1.51 register capture + pinned Nuked OPL3 (OPL2)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  },
+  {
+    "name": "voyage3",
+    "file": "audio/voyage3.mp3",
+    "input": "analysis/resources/audio/voyage3-992bcf12.flac",
+    "input_sha256": "5502a05406a697ab0330c413108a6e59c75a32a99186acf850ca5e6b8ad46344",
+    "seconds": 234.24202083333333,
+    "method": "AdPlug 2.4 Visual Composer + Nuked OPL3 (OPL2 mode)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  },
+  {
+    "name": "heavens",
+    "file": "audio/heavens.mp3",
+    "input": "analysis/resources/audio/heavens-992bcf12.flac",
+    "input_sha256": "80fa7b8a1303aeb283465ef3a2c89185cae94542a811da42274eb3becd66fcda",
+    "seconds": 231.64727083333332,
+    "method": "AdPlug 2.4 Visual Composer + Nuked OPL3 (OPL2 mode)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  },
+  {
+    "name": "daybreak",
+    "file": "audio/daybreak.mp3",
+    "input": "analysis/resources/audio/daybreak-992bcf12.flac",
+    "input_sha256": "ec24eea4ba39fb9545a1748084d56c6e0a944610459a714e6b3f86a74ba2b9ed",
+    "seconds": 154.15616666666668,
+    "method": "AdPlug 2.4 Visual Composer + Nuked OPL3 (OPL2 mode)",
+    "encoding": "MP3 VBR quality 3, without gain changes"
+  }
+]

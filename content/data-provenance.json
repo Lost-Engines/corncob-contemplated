@@ -1,0 +1,227 @@
+{
+  "source": "https://github.com/Lost-Engines/corncob-reverse",
+  "analysis_index_sha256": "17e5273672bd0718049f93f754b20104120b36185ea117669dfb7701b387e64b",
+  "scope": "Selected original world definitions and training/source experiments; three executable model banks and source-only appearances. Saved pilots and installations are not part of this public snapshot.",
+  "banks": [
+    {
+      "id": "deluxe_dnk",
+      "name": "Earth \u00b7 retail 3.42",
+      "file": "models-deluxe_dnk.json"
+    },
+    {
+      "id": "other_worlds_download",
+      "name": "Other Worlds \u00b7 3.42",
+      "file": "models-other_worlds_download.json"
+    },
+    {
+      "id": "shareware_1_20",
+      "name": "Early shareware \u00b7 1.20",
+      "file": "models-shareware_1_20.json"
+    },
+    {
+      "id": "source_variants",
+      "name": "Source experiments",
+      "file": "models-source_variants.json"
+    }
+  ],
+  "worlds": [
+    {
+      "id": "morning",
+      "name": "Atkinsville",
+      "group": "Earth",
+      "bank": "deluxe_dnk",
+      "file": "world-morning.json",
+      "objects": 221,
+      "starts": 4
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "group": "Earth",
+      "bank": "deluxe_dnk",
+      "file": "world-dusk.json",
+      "objects": 169,
+      "starts": 4
+    },
+    {
+      "id": "wastelnd",
+      "name": "Wasteland",
+      "group": "Earth",
+      "bank": "deluxe_dnk",
+      "file": "world-wastelnd.json",
+      "objects": 185,
+      "starts": 4
+    },
+    {
+      "id": "whtsands",
+      "name": "White Sands",
+      "group": "Earth",
+      "bank": "deluxe_dnk",
+      "file": "world-whtsands.json",
+      "objects": 51,
+      "starts": 0
+    },
+    {
+      "id": "other-exp",
+      "name": "Arrakis",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-exp.json",
+      "objects": 154,
+      "starts": 5
+    },
+    {
+      "id": "other-morning",
+      "name": "Atkinsville",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-morning.json",
+      "objects": 221,
+      "starts": 4
+    },
+    {
+      "id": "other-thin",
+      "name": "Breathless",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-thin.json",
+      "objects": 87,
+      "starts": 2
+    },
+    {
+      "id": "other-default",
+      "name": "Builder default",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-default.json",
+      "objects": 226,
+      "starts": 0
+    },
+    {
+      "id": "other-dusk",
+      "name": "Dusk",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-dusk.json",
+      "objects": 169,
+      "starts": 4
+    },
+    {
+      "id": "other-mtuniv",
+      "name": "Empty universe",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-mtuniv.json",
+      "objects": 25,
+      "starts": 0
+    },
+    {
+      "id": "other-flatland",
+      "name": "Flatland",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-flatland.json",
+      "objects": 925,
+      "starts": 19
+    },
+    {
+      "id": "other-iceworld",
+      "name": "Ice World",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-iceworld.json",
+      "objects": 807,
+      "starts": 14
+    },
+    {
+      "id": "other-midnight",
+      "name": "Midnight",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-midnight.json",
+      "objects": 139,
+      "starts": 0
+    },
+    {
+      "id": "other-milkrun",
+      "name": "Milk Runs",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-milkrun.json",
+      "objects": 600,
+      "starts": 21
+    },
+    {
+      "id": "other-newatkin",
+      "name": "New Atkinsville",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-newatkin.json",
+      "objects": 218,
+      "starts": 4
+    },
+    {
+      "id": "other-quari",
+      "name": "Quari",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-quari.json",
+      "objects": 840,
+      "starts": 18
+    },
+    {
+      "id": "other-demo1",
+      "name": "Recorded-demo world",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-demo1.json",
+      "objects": 236,
+      "starts": 0
+    },
+    {
+      "id": "other-tundra",
+      "name": "Tundra",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-tundra.json",
+      "objects": 190,
+      "starts": 6
+    },
+    {
+      "id": "other-wastelnd",
+      "name": "Wasteland",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-wastelnd.json",
+      "objects": 185,
+      "starts": 4
+    },
+    {
+      "id": "other-whtsands",
+      "name": "White Sands",
+      "group": "Other Worlds & examples",
+      "bank": "other_worlds_download",
+      "file": "world-other-whtsands.json",
+      "objects": 51,
+      "starts": 0
+    },
+    {
+      "id": "training",
+      "name": "Training ground",
+      "group": "Training",
+      "bank": "deluxe_dnk",
+      "file": "world-training.json",
+      "objects": 67,
+      "starts": 0
+    },
+    {
+      "id": "slalom",
+      "name": "The slalom course",
+      "group": "Source experiment",
+      "bank": "source_variants",
+      "file": "world-slalom.json",
+      "objects": 109,
+      "starts": 1
+    }
+  ]
+}

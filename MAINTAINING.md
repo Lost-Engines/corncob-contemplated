@@ -1,0 +1,45 @@
+# Maintaining Corncob Contemplated
+
+Requires Node.js 22 or newer. CI uses Node 24.
+
+```sh
+npm ci
+npm run build
+npm run check
+npm run preview
+```
+
+The complete static site is in `dist/`. Serve it over HTTP: the viewers fetch
+small JSON collections as needed. `npm run dev` rebuilds source/content changes;
+refresh the browser to see them. `SITE_PREFIX=/corncob-contemplated PORT=4176 npm run preview`
+checks the same subpath arrangement used by GitHub Pages.
+
+Normal builds require only this repository. `public/data/` is a committed display
+snapshot; it does not fetch a sibling checkout or download game files. The optional
+refresh command is:
+
+```sh
+python3 scripts/import-analysis.py /path/to/corncob-reverse
+```
+
+The importer keeps selected pristine worlds and source experiments, not historical
+saved pilots. `content/data-provenance.json` records the originating index hash
+and scope. The adapted renderer in `src/model-engine.js` comes from our research
+viewer in `corncob-reverse/tools/model_viewer.js`; refresh it deliberately when
+fixing model interpretation. Models retain authored painter lists; the optional
+3D atlas uses modern depth testing and simplified scenery colours. Model coordinates
+are in two-centimetre units; world placement coordinates are centimetres. The
+atlas scales local geometry by two, preserving contiguous runway pieces.
+
+- `content/investigation.md`: the illustrated article.
+- `content/research-sources.md`: claim-to-evidence pointers.
+- `src/pages.mjs`: editorial page layouts and labels.
+- `src/models.js`, `src/atlas.js`, `src/map3d.js`: viewer interaction.
+- `public/images/`: checked-in screenshots and social previews.
+- `public/audio/`: browser listening copies, with methods on the music page.
+- `site.config.json`: canonical site, archive and repository URLs.
+
+Publishing uses GitHub Actions on `master`. Set the repository's Pages build
+source to GitHub Actions. The workflow builds/checks before uploading `dist/`;
+relative navigation and lazy-loaded assets work at the repository subpath.
+The analysis archive has a separate publisher and deployment destination.

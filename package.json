@@ -1,0 +1,23 @@
+{
+  "name": "corncob-contemplated",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An illustrated investigation and interactive atlas of Corncob 3D",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --serve",
+    "preview": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "marked": "18.1.0"
+  }
+}
