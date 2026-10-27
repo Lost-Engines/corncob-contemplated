@@ -1,7 +1,8 @@
 import {$,load,options,escape,permalink} from './data.js';
+import {onPointerTap} from './pointer-tap.js';
 const query=new URLSearchParams(location.search),canvas=$('map-canvas'),ctx=canvas.getContext('2d');
 let catalog,world,selected=null,selectedStart=null,scene=null,mode=query.get('view')==='2d'?'2d':'3d',token=0,ready=false;
-let camera={x:0,y:0,scale:1},pointers=new Map(),gesture=null;
+let camera={x:0,y:0,scale:1},pointers=new Map();
 const colours={0:'#ffcf6d',1:'#e9a1f3',2:'#89adff',6:'#faf2cd',7:'#d99a55',11:'#e67977',12:'#d3b58f',13:'#e67977',23:'#e67977',24:'#a1b2f5',27:'#d0c783',31:'#617466',48:'#e8e8de',50:'#f696db',51:'#ec91cb',52:'#d8b4f6',53:'#ffbf66',57:'#a5d9ae',58:'#91e9d5'};
 const visible=()=>world.objects.filter(o=>!$('type').value||String(o.type)===$('type').value);
 function status(message){$('map-status').textContent=message;}
@@ -88,9 +89,11 @@ async function start(){
  function zoom(factor,x=canvas.clientWidth/2,y=canvas.clientHeight/2){const wx=camera.x+(x-canvas.clientWidth/2)/camera.scale,wy=camera.y-(y-canvas.clientHeight/2)/camera.scale;camera.scale=Math.max(1e-7,Math.min(.03,camera.scale*factor));camera.x=wx-(x-canvas.clientWidth/2)/camera.scale;camera.y=wy+(y-canvas.clientHeight/2)/camera.scale;draw();}
  canvas.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-','='].includes(e.key))return;e.preventDefault();const distance=canvas.clientWidth*.1/camera.scale;if(e.key==='ArrowLeft')camera.x-=distance;if(e.key==='ArrowRight')camera.x+=distance;if(e.key==='ArrowUp')camera.y+=distance;if(e.key==='ArrowDown')camera.y-=distance;if(e.key==='+'||e.key==='=')zoom(1.4);if(e.key==='-')zoom(1/1.4);draw();};
  canvas.onwheel=e=>{e.preventDefault();const r=canvas.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.001),e.clientX-r.left,e.clientY-r.top);};
- canvas.onpointerdown=e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);gesture={x:e.clientX,y:e.clientY,moved:false};};
- canvas.onpointermove=e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId),others=[...pointers].filter(([id])=>id!==e.pointerId);if(others.length){const p=others[0][1],before=Math.hypot(previous.x-p.x,previous.y-p.y),after=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(before>0)zoom(after/before);gesture.moved=true;}else{camera.x-=(e.clientX-previous.x)/camera.scale;camera.y+=(e.clientY-previous.y)/camera.scale;if(Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y)>4)gesture.moved=true;}pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});draw();};
- canvas.onpointerup=e=>{pointers.delete(e.pointerId);if(gesture&&!gesture.moved){const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,distance=144;for(const o of visible()){const p=xy(o.position_cm),d=(p[0]-x)**2+(p[1]-y)**2;if(d<distance){distance=d;best=o;}}if(best)inspect(best);}gesture=null;};canvas.onpointercancel=e=>{pointers.delete(e.pointerId);gesture=null;};
+ canvas.onpointerdown=e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);};
+ canvas.onpointermove=e=>{if(!pointers.has(e.pointerId))return;const previous=pointers.get(e.pointerId),others=[...pointers].filter(([id])=>id!==e.pointerId);if(others.length){const p=others[0][1],before=Math.hypot(previous.x-p.x,previous.y-p.y),after=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(before>0)zoom(after/before);}else{camera.x-=(e.clientX-previous.x)/camera.scale;camera.y+=(e.clientY-previous.y)/camera.scale;}pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});draw();};
+ canvas.onpointerup=canvas.onpointercancel=canvas.onlostpointercapture=e=>pointers.delete(e.pointerId);
+ window.addEventListener('blur',()=>pointers.clear());
+ onPointerTap(canvas,e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,distance=144;for(const o of visible()){const p=xy(o.position_cm),d=(p[0]-x)**2+(p[1]-y)**2;if(d<distance){distance=d;best=o;}}if(best)inspect(best);});
  new ResizeObserver(()=>{if(world)draw();}).observe(canvas);await change();
 }
 start().catch(e=>status(e.message));

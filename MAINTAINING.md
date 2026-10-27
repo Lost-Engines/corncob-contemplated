@@ -84,3 +84,9 @@ site's vertical extent and panning stays parallel to the ground. The slalom star
 uses the first checkpoint. `scripts/check-mission-camera.py --url <served-site>/`
 checks ground pivots, elevated sites, actual wheel/pan input, filters and 2D/3D
 switching at desktop and narrow widths. `--screenshots` captures the sample views.
+
+`src/pointer-tap.js` shares click-versus-drag tracking between both map projections
+and the research viewer. `scripts/check-map-selection.py --url <served-site>/`
+covers returning drags, button/modifier restrictions, cancellation, capture/focus
+loss and multi-touch, with ordinary clicks and taps as positive controls. Add
+`--analysis` and use the full resource-index URL to check the research viewer.
