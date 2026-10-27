@@ -156,6 +156,6 @@ The investigation became a [native C++ reconstruction](https://github.com/Lost-E
 
 The source made this a much quicker reconstruction than we expected. It did not make the comparison work disappear. The moments when we could not get back into an aircraft, found the wrong weapon in White Sands, or thought a tower wall should hide its door were exactly the moments when the original game was most useful to have running beside us.
 
-There is no need to read assembly to enjoy the results. [Look around an airfield](../atlas/?world=whtsands&amp;view=3d), [meet the ground crew](../models/?model=7&amp;state=gesture), or [visit the slalom barn](../models/?bank=source_variants&amp;model=source-farm). The shapes are tiny. They have quite a lot to say.
+There is no need to read assembly to enjoy the results. [Look around an airfield](../atlas/?world=training&amp;view=3d), [meet the ground crew](../models/?model=7&amp;state=gesture), or [visit the slalom barn](../models/?bank=source_variants&amp;model=source-farm). The shapes are tiny. They have quite a lot to say.
 
 <div class="aside"><strong>About this account.</strong> The executable comparisons, decoded resources, source references and controlled checks are collected in the <a href="https://lostengines.com/corncob/">full research archive</a>. The viewers here are adapted displays, not emulations of the whole game. We have kept uncertain interpretations—such as the pond and the role of the slalom traffic—separate from things confirmed by code or original execution.</div>

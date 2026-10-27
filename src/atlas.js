@@ -64,7 +64,7 @@ async function change(){
 }
 async function start(){
  catalog=await load('catalog.json');$('world').replaceChildren();for(const group of [...new Set(catalog.worlds.map(w=>w.group))]){const opt=document.createElement('optgroup');opt.label=group;for(const w of catalog.worlds.filter(w=>w.group===group))opt.append(new Option(w.name,w.id));$('world').append(opt);}
- $('world').value=catalog.worlds.some(w=>w.id===query.get('world'))?query.get('world'):'morning';$('world').onchange=change;
+ $('world').value=catalog.worlds.some(w=>w.id===query.get('world'))?query.get('world'):'training';$('world').onchange=change;
  $('view-2d').onclick=()=>view('2d');$('view-3d').onclick=()=>view('3d');$('type').onchange=()=>{draw();scene?.filter($('type').value);};$('objectives').onchange=draw;
  $('landmark').onchange=()=>inspect(world.objects.find(o=>String(o.index)===$('landmark').value),true);
  $('fit').onclick=()=>{selected=null;fit();scene?.overview();};$('airfield').onclick=()=>inspect(world.objects.find(o=>o.type===6)||world.objects.find(o=>o.type===2),true);

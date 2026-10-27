@@ -50,5 +50,9 @@ for(const object of parked){
  if(object.index===173)assert.ok(Math.abs(forward.x+forward.y)<1e-12&&forward.x>0&&forward.y<0);
 }
 assert.deepEqual(placementRotation({angles_u16:[57344,64000,0]}).toArray(),placementRotation(parked[1]).toArray());
+const training=await read('world-training.json'),trainingPlane=training.objects.find(o=>o.type===2);
+const forward=new Vector3(1,0,0).applyEuler(placementRotation(trainingPlane));
+assert.ok(Math.abs(forward.x+forward.y)<1e-12&&forward.x>0&&forward.y<0);
+assert.ok(forward.z>.14&&forward.z<.15,'Training aircraft should have a gentle nose-up pitch');
 if(errors.length)throw Error([...new Set(errors)].join('\n'));
 console.log(`Checked ${list.length} publishing files, ${links} local links, ${catalog.banks.length} model collections and ${catalog.worlds.length} worlds.`);
