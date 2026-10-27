@@ -113,7 +113,7 @@ export class MapScene {
   this.frame=requestAnimationFrame(this.tick);
  };
  filter(type){for(const group of this.groups)group.visible=!type||String(group.userData.object.type)===type;}
- position(position){const p=new THREE.Vector3(...position.map(v=>v/100000));this.controls.target.copy(p);this.camera.position.copy(p).add(new THREE.Vector3(.65,-.8,.25));this.controls.update();}
+ position(position){const p=new THREE.Vector3(...position.map(v=>v/100000));this.controls.target.copy(p);this.camera.position.copy(p).add(new THREE.Vector3(.65,-.8,.25).applyAxisAngle(this.camera.up,-3*Math.PI/4));this.controls.update();}
  focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),centre=box.getCenter(new THREE.Vector3()),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(distance*.5,-distance*.8,distance*.45));this.controls.update();this.select(object);}
  select(object){if(this.selection){this.scene.remove(this.selection);this.selection.geometry.dispose();this.selection.material.dispose();}const group=this.groups.find(g=>g.userData.object===object);if(group){this.selection=new THREE.BoxHelper(group,0xffffaa);this.scene.add(this.selection);}}
  overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));const centre=box.getCenter(new THREE.Vector3()),extent=box.getSize(new THREE.Vector3()).length();this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(extent*.35,-extent*.55,extent*.6));this.controls.update();}
