@@ -38,7 +38,7 @@ function inspect(object,focus=false){
 }
 function chooseStart(index){
  const mission=world.starts[index];if(!mission)return;
- selected=null;selectedStart=index;scene?.select(null);camera.x=mission.position_cm[0];camera.y=mission.position_cm[1];camera.scale=Math.max(camera.scale,.00025);draw();scene?.position(mission.position_cm);
+ selected=null;selectedStart=index;$('type').value='';scene?.filter('');scene?.select(null);camera.x=mission.position_cm[0];camera.y=mission.position_cm[1];camera.scale=Math.max(camera.scale,.00025);draw();scene?.missionStart(mission);
  $('place-name').textContent=mission.name;$('place-note').textContent='Recorded mission starting position';$('place-position').textContent=`X ${(mission.position_cm[0]/100000).toFixed(2)} km · Y ${(mission.position_cm[1]/100000).toFixed(2)} km · height ${(mission.position_cm[2]/100).toFixed(0)} m`;$('place-model').hidden=true;
  $('mission-note').textContent='Original briefing; selecting this start does not run the mission.';
  const host=$('mission-briefing');host.replaceChildren();host.hidden=false;
@@ -53,7 +53,7 @@ async function view(next){
  mode=next;$('view-2d').setAttribute('aria-pressed',String(mode==='2d'));$('view-3d').setAttribute('aria-pressed',String(mode==='3d'));
  canvas.hidden=mode!=='2d';$('map3d').hidden=mode!=='3d';
  if(mode==='3d'){
-  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));scene.setColourCycling($('cycle-colours').checked);await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);else if(selectedStart!==null)scene.position(world.starts[selectedStart].position_cm);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
+  try{if(!scene){status('Opening the 3D view…');const {MapScene}=await import('./map3d.js');scene=new MapScene($('map3d'),object=>inspect(object));scene.setColourCycling($('cycle-colours').checked);await scene.world(world,catalog);scene.filter($('type').value);}scene.active(true);if(selected)scene.focus(selected);else if(selectedStart!==null)scene.missionStart(world.starts[selectedStart]);}catch(e){status(`${e.message} The 2D atlas remains available.`);mode='2d';canvas.hidden=false;$('map3d').hidden=true;$('view-2d').setAttribute('aria-pressed','true');$('view-3d').setAttribute('aria-pressed','false');}
  }else{scene?.active(false);draw();}
  $('cycle-colours').disabled=mode!=='3d';$('objectives').disabled=mode!=='2d';$('objectives').title=mode==='2d'?'Show objective rings and mission-start crosses on the atlas.':'These markers are available in the 2D atlas.';
  permalink({world:world.id,object:selected?.index,view:mode,start:selectedStart});

@@ -76,3 +76,11 @@ and atlas captures. It needs Python Playwright and Chromium; if necessary,
 `PLAYWRIGHT_DRIVER_CLI` can point to a matching Playwright Node CLI. Copy the
 resulting `public/images/social-preview.jpg` to the research repository’s
 `tools/publish/corncob-social.jpg` when updating the shared card.
+
+Mission starts frame nearby objective scenery along the stored approach heading.
+This is an inspection heuristic, not a mission-to-object relationship stored in
+the game files. The orbit centre stays on the ground; the framing includes the
+site's vertical extent and panning stays parallel to the ground. The slalom start
+uses the first checkpoint. `scripts/check-mission-camera.py --url <served-site>/`
+checks ground pivots, elevated sites, actual wheel/pan input, filters and 2D/3D
+switching at desktop and narrow widths. `--screenshots` captures the sample views.

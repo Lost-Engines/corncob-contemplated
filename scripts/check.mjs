@@ -3,7 +3,7 @@ import {readdir,readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {worldColours} from '../src/world-colours.js';
-import {placementRotation} from '../src/map3d.js';
+import {placementRotation,missionFocus} from '../src/map3d.js';
 import {Vector3} from 'three';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist'),errors=[];
@@ -54,5 +54,19 @@ const training=await read('world-training.json'),trainingPlane=training.objects.
 const forward=new Vector3(1,0,0).applyEuler(placementRotation(trainingPlane));
 assert.ok(Math.abs(forward.x+forward.y)<1e-12&&forward.x>0&&forward.y<0);
 assert.ok(forward.z>.14&&forward.z<.15,'Training aircraft should have a gentle nose-up pitch');
+// A closer installation behind the start, or a distant one straight ahead,
+// must not steal the view from the nearby objective on the approach heading.
+const near={type:0,index:1,position_cm:[1000000,50000,10000]},behind={type:0,index:2,position_cm:[-100,0,0]},far={type:0,index:3,position_cm:[50000000,0,0]};
+const start={position_cm:[0,0,100000],yaw:0};
+assert.deepEqual(missionFocus({objects:[behind,far,near]},start),near.position_cm);
+assert.deepEqual(missionFocus({objects:[]},start),[100000,0,0]);
+const tundra=await read('world-other-tundra.json');
+assert.deepEqual(missionFocus(tundra,tundra.starts[0]),tundra.objects.find(o=>o.index===163).position_cm);
+assert.ok(missionFocus(tundra,tundra.starts[1])[2]>tundra.starts[1].position_cm[2],'Icarus targets are above its start');
+assert.deepEqual(missionFocus(tundra,{...tundra.starts[1],yaw:tundra.starts[1].yaw-65536}),missionFocus(tundra,tundra.starts[1]));
+const ice=await read('world-other-iceworld.json');
+assert.deepEqual(missionFocus(ice,ice.starts[2]),ice.objects.find(o=>o.index===233).position_cm,'Bats in the attic: the nearer installation is off to one side');
+const slalom=await read('world-slalom.json');
+assert.deepEqual(missionFocus(slalom,slalom.starts[0]),slalom.slalom.checkpoints[0].position_cm);
 if(errors.length)throw Error([...new Set(errors)].join('\n'));
 console.log(`Checked ${list.length} publishing files, ${links} local links, ${catalog.banks.length} model collections and ${catalog.worlds.length} worlds.`);

@@ -9,12 +9,33 @@ export function placementRotation(object){
  const angles=object.angles_u16||object.angles_u8?.map(v=>v*256)||[0,0,0];
  return new THREE.Euler(angles[2]*Math.PI/32768,angles[1]*Math.PI/32768,angles[0]*Math.PI/32768,'ZYX');
 }
+// Briefings store a start and heading, not an object reference. This is a
+// viewing aid: prefer nearby objective scenery within 30 degrees of that
+// heading, rather than assigning mission ownership to a placed object.
+export function missionFocus(world,start){
+ if(world.slalom?.checkpoints?.length)return world.slalom.checkpoints[0].position_cm;
+ const p=start.position_cm,heading=(start.yaw??start.angles_u16?.[0]??0)*Math.PI/32768;
+ const dx=Math.cos(heading),dy=Math.sin(heading);
+ const scenery=world.objects.filter(o=>![2,5,31,35,36].includes(o.type));
+ const objectives=scenery.filter(o=>o.objective||[0,1,53].includes(o.type)||(o.type===7&&(o.flags&0x0800)));
+ const ahead=items=>items.map(o=>{
+  const x=o.position_cm[0]-p[0],y=o.position_cm[1]-p[1],along=x*dx+y*dy,across=y*dx-x*dy;
+  const distance=Math.hypot(x,y,o.position_cm[2]-p[2]);
+  return {object:o,along,across,score:distance*(1+4*across**2/Math.max(1,x*x+y*y))};
+ }).filter(c=>c.along>100&&Math.abs(c.across)<=c.along*Math.tan(Math.PI/6)).sort((a,b)=>a.score-b.score)[0]?.object;
+ // Saved campaigns can have destroyed targets; malformed/outlying original
+ // starts can face away from the entire world. Keep their coordinates intact
+ // and fall back to the nearest surviving scenery rather than an empty sky.
+ const nearest=items=>items.reduce((best,o)=>!best||Math.hypot(...o.position_cm.map((v,i)=>v-p[i]))<Math.hypot(...best.position_cm.map((v,i)=>v-p[i]))?o:best,null);
+ const object=ahead(objectives)||ahead(scenery)||nearest(objectives)||nearest(scenery);
+ return object?.position_cm||[p[0]+dx*100000,p[1]+dy*100000,0];
+}
 export class MapScene {
  constructor(host,pick){
   this.host=host;this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#55ffff');
   this.camera=new THREE.PerspectiveCamera(50,1,.00005,2000);this.camera.up.set(0,0,1);
   this.renderer=new THREE.WebGLRenderer({antialias:false,logarithmicDepthBuffer:true});this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));this.renderer.setClearColor('#55ffff');host.replaceChildren(this.renderer.domElement);
-  this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=true;this.controls.minDistance=.005;this.controls.maxDistance=400;this.controls.maxPolarAngle=Math.PI*.495;
+  this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=true;this.controls.screenSpacePanning=false;this.controls.minDistance=.005;this.controls.maxDistance=400;this.controls.maxPolarAngle=Math.PI*.495;
   this.materials=palette.map(rgb=>new THREE.MeshBasicMaterial({color:new THREE.Color(`rgb(${rgb.join(',')})`),side:THREE.DoubleSide}));
   this.lines=palette.map(rgb=>new THREE.LineBasicMaterial({color:new THREE.Color(`rgb(${rgb.join(',')})`)}));
   const disk=document.createElement('canvas');disk.width=disk.height=64;const ctx=disk.getContext('2d');ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(32,32,31,0,Math.PI*2);ctx.fill();this.texture=new THREE.CanvasTexture(disk);this.texture.magFilter=THREE.NearestFilter;this.texture.minFilter=THREE.LinearFilter;
@@ -116,10 +137,36 @@ export class MapScene {
   this.frame=requestAnimationFrame(this.tick);
  };
  filter(type){for(const group of this.groups)group.visible=!type||String(group.userData.object.type)===type;}
- position(position){const p=new THREE.Vector3(...position.map(v=>v/100000));this.controls.target.copy(p);this.camera.position.copy(p).add(new THREE.Vector3(.65,-.8,.25).applyAxisAngle(this.camera.up,-3*Math.PI/4));this.controls.update();}
- focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),centre=box.getCenter(new THREE.Vector3()),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(distance*.5,-distance*.8,distance*.45));this.controls.update();this.select(object);}
+ // Every framing command keeps the orbit/zoom pivot on the ground. Fit the
+ // vertical extent as well, so floating installations stay in view without
+ // making the wheel converge on an arbitrary point in the air.
+ groundView(bounds,offset){
+  const target=bounds.getCenter(new THREE.Vector3());target.z=0;
+  const normal=offset.clone().normalize(),right=new THREE.Vector3().crossVectors(this.camera.up,normal).normalize(),up=new THREE.Vector3().crossVectors(normal,right);
+  const vertical=Math.tan(this.camera.fov*Math.PI/360)*.82,aspect=this.host.clientWidth/Math.max(1,this.host.clientHeight)||this.camera.aspect;
+  let distance=Math.max(offset.length(),this.controls.minDistance);
+  for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [Math.min(0,bounds.min.z),bounds.max.z]){
+   const point=new THREE.Vector3(x,y,z).sub(target),depth=point.dot(normal);
+   distance=Math.max(distance,depth+Math.abs(point.dot(up))/vertical,depth+Math.abs(point.dot(right))/(vertical*aspect),depth+this.camera.near*2);
+  }
+  // Finish any damped pan/orbit before installing the new view.
+  const damping=this.controls.enableDamping;this.controls.enableDamping=false;this.controls.update();
+  this.controls.target.copy(target);this.controls.maxDistance=Math.max(400,distance);
+  this.camera.position.copy(target).addScaledVector(normal,distance);this.controls.update();this.controls.enableDamping=damping;
+ }
+ position(position){const p=new THREE.Vector3(...position.map(v=>v/100000)),bounds=new THREE.Box3(p.clone(),p.clone());this.groundView(bounds,new THREE.Vector3(.65,-.8,Math.max(.25,p.z*1.3)).applyAxisAngle(this.camera.up,-3*Math.PI/4));}
+ missionStart(start){
+  const point=new THREE.Vector3(...missionFocus(this.worldData,start).map(v=>v/100000));
+  const bounds=new THREE.Box3(point.clone(),point.clone());
+  for(const group of this.groups)if(group.userData.object.type!==31&&Math.hypot(group.position.x-point.x,group.position.y-point.y)<=2)bounds.expandByObject(group);
+  const centre=bounds.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(start.position_cm[0]/100000-centre.x,start.position_cm[1]/100000-centre.y,0);
+  if(offset.length()<.01){const heading=(start.yaw??start.angles_u16?.[0]??0)*Math.PI/32768;offset.set(-Math.cos(heading),-Math.sin(heading),0);}
+  offset.z=Math.max(.015,start.position_cm[2]/100000,offset.length()*.65,bounds.max.z*1.3);
+  this.groundView(bounds,offset);
+ }
+ focus(object){const group=this.groups.find(g=>g.userData.object===object);if(!group){this.position(object.position_cm);return;}const box=new THREE.Box3().setFromObject(group),distance=Math.max(.008,box.getSize(new THREE.Vector3()).length()*2.5);this.groundView(box,new THREE.Vector3(distance*.5,-distance*.8,Math.max(distance*.45,box.max.z*1.3)));this.select(object);}
  select(object){if(this.selection){this.scene.remove(this.selection);this.selection.geometry.dispose();this.selection.material.dispose();}const group=this.groups.find(g=>g.userData.object===object);if(group){this.selection=new THREE.BoxHelper(group,0xffffaa);this.scene.add(this.selection);}}
- overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));if(box.isEmpty()){this.position([0,0,0]);return;}const centre=box.getCenter(new THREE.Vector3()),extent=box.getSize(new THREE.Vector3()).length();this.controls.target.copy(centre);this.camera.position.copy(centre).add(new THREE.Vector3(extent*.35,-extent*.55,extent*.6));this.controls.update();}
+ overview(){const groups=this.groups.filter(g=>g.userData.object.type!==31),box=new THREE.Box3();groups.forEach(g=>box.expandByObject(g));if(box.isEmpty()){this.position([0,0,0]);return;}const extent=box.getSize(new THREE.Vector3()).length();this.groundView(box,new THREE.Vector3(extent*.35,-extent*.55,Math.max(.015,extent*.6,box.max.z*1.3)));}
  zoom(factor){this.camera.position.sub(this.controls.target).multiplyScalar(factor).add(this.controls.target);this.controls.update();}
  dispose(){this.active(false);this.disposed=true;this.resize.disconnect();this.controls.dispose();document.removeEventListener('visibilitychange',this.visibility);this.host.removeEventListener('pointerdown',this.down);this.host.removeEventListener('pointerup',this.up);this.scene.traverse(o=>o.geometry?.dispose());[...this.materials,...this.lines,...this.sprites,...this.decals.values()].forEach(m=>m.dispose());this.selection?.material.dispose();this.texture.dispose();this.renderer.dispose();this.renderer.forceContextLoss();this.host.replaceChildren();}
 }
