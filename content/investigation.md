@@ -173,3 +173,5 @@ The source made this a much quicker reconstruction than we expected. It did not 
 There is no need to read assembly to enjoy the results. [Look around an airfield](../atlas/?world=training&amp;view=3d), [meet the ground crew](../models/?model=7&amp;state=gesture), or [visit the slalom barn](../models/?bank=source_variants&amp;model=source-farm). The shapes are tiny. They have quite a lot to say.
 
 <div class="aside"><strong>About this account.</strong> The executable comparisons, decoded resources, source references and controlled checks are collected in the <a href="https://lostengines.com/corncob/">full research archive</a>. The viewers here are adapted displays, not emulations of the whole game. We have kept uncertain interpretations—such as the pond and the role of the slalom traffic—separate from things confirmed by code or original execution.</div>
+
+For a closer look at the flying itself, [Keeping Corncob in the air](../flight/) explores Beginner and Advanced mode, the unusually generous engine, stalls, wheel contact and a braking mistake that makes the runway’s compass direction matter.

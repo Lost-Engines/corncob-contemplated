@@ -258,3 +258,5 @@ This article follows our own inspection of the original data and routines. The p
 - [Article evidence and illustration provenance](https://github.com/Lost-Engines/corncob-contemplated/blob/master/content/graphics-sources.md), including the limits of the interactive examples.
 
 For a more elaborate engine from a couple of years later, our [TFX graphics article](https://lost-engines.github.io/tfx-traced/graphics/) follows model programs, terrain, textures and cockpit displays through another software renderer.
+
+The picture is only half of the flight. Our [flight-physics article](../flight/) follows the controls, lift, engine power and landing-gear logic, with measurements from the original executable.

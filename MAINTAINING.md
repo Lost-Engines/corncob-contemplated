@@ -140,3 +140,37 @@ Sands / Quari palette comparison from the atlas, with colour animation paused.
 The other two PNGs are preserved original-game output and a decoded cockpit mask;
 their source paths and hashes are in the evidence notes. Normal builds do not
 launch a browser or require the separate research checkout.
+
+## Flight-physics article
+
+`content/flight-physics.md` is the article at `flight/`.
+`content/flight-sources.md` maps claims to original procedures and records the
+measurement scope. It shares the graphics article's layout, controls and print
+styles; `src/flight-diagrams.mjs` and `src/flight.js` supply its illustrations.
+
+The small `public/data/flight-samples.json` snapshot contains retail executable
+measurements, not a JavaScript flight simulation. Normal builds need only
+committed data. After editing a diagram, regenerate both layouts with:
+
+```sh
+node scripts/make-flight-diagrams.mjs
+npm run build
+npm run check
+```
+
+Optional refresh: `scripts/sample-flight.py --analysis /path/to/corncob-reverse
+--cpp /path/to/corncob-cpp`, with Python Unicorn installed. It verifies the EXE
+hash and uses C++ reference-loading helpers, writing only the site snapshot.
+This is separate from the ordinary site build.
+
+With the build served under the Pages subpath:
+
+```sh
+python3 scripts/check-flight.py --url http://127.0.0.1:4187/corncob-contemplated/ --screenshots /tmp/corncob-flight-review
+```
+
+The browser check covers data readouts, keyboard use, contact transitions, mobile
+layout, missing-data/no-JavaScript fallbacks, printing and browser errors.
+`check-graphics.py` also covers the shared styling. Screenshot provenance is in
+`content/flight-image-provenance.json`; no authoring binaries or full source
+archives are copied into the public site.

@@ -1,0 +1,47 @@
+[
+  {
+    "source": "/tmp/corncob-chase/banked.png",
+    "source_sha256": "98dbb87dac227c828865e20735bc26bebf8a7e9088c7386febf6c6117f67f6c9",
+    "original_size": [
+      1280,
+      720
+    ],
+    "published_file": "public/images/flight/banked.webp",
+    "published_size": [
+      1280,
+      720
+    ],
+    "published_sha256": "988cd4d4042f03675c774ce9704d7a787ca395bfdf70ab190608634d08c86878",
+    "conversion": "RGB; proportional Lanczos resize if needed; lossless WebP method 6"
+  },
+  {
+    "source": "/tmp/corncob-proportions/corncob-redux-12-overnight-express-approach.png",
+    "source_sha256": "e9ab7bcd0f083a19f7285d4a3c8996ecc238f230e8f57851ab9699fb681fd264",
+    "original_size": [
+      3840,
+      2160
+    ],
+    "published_file": "public/images/flight/suspended-approach.webp",
+    "published_size": [
+      1600,
+      900
+    ],
+    "published_sha256": "8c4d122b9fc078ae98d1dc22a462d4d4ee076654047f5f2ca93f72acefdab528",
+    "conversion": "RGB; proportional Lanczos resize if needed; lossless WebP method 6"
+  },
+  {
+    "source": "/tmp/corncob-chase/experimental.png",
+    "source_sha256": "4af87648bed041595fe8c2adeb93ca15e9904e021055b50a3468e53aaabaf55d",
+    "original_size": [
+      1280,
+      720
+    ],
+    "published_file": "public/images/flight/experimental.webp",
+    "published_size": [
+      1280,
+      720
+    ],
+    "published_sha256": "29c3ab95fae64809af9a039460ee332a784fa7d284d1af0d1c6efc86caac1693",
+    "conversion": "RGB; proportional Lanczos resize if needed; lossless WebP method 6"
+  }
+]
