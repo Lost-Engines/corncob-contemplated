@@ -50,6 +50,8 @@ There is also a bloodied pose. White Sands does not give the pilot a pistol, whi
 
 ## Eight lists instead of a depth buffer
 
+Our [standalone graphics article](../graphics/) follows this further, from model coordinates and painter lists through clipping, pixel spans and the VGA hardware, with interactive examples.
+
 Getting the shapes out was only half the job. Corncob was designed to draw them in a particular order.
 
 A model has eight ordered drawing lists, selected according to which side of it the camera occupies. They can omit a surface, repeat a surface or interleave different kinds of primitive. The lists are part of the artwork. Combining everything into one convenient mesh loses information.

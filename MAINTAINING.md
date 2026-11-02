@@ -102,3 +102,41 @@ zoom, wireframes at three zoom levels, and transparent sprite corners. It runs
 at two viewport/pixel-density combinations; `--analysis` checks the research
 viewer too. Line picking allows three CSS pixels at each segment's depth, rather
 than Three.js's default one-world-unit tolerance (one kilometre here).
+
+## Graphics article
+
+`content/graphics-engine.md` is the standalone renderer walkthrough at `graphics/`;
+`content/graphics-sources.md` records its claims, source procedures and illustration
+provenance. `src/graphics-diagrams.mjs` supplies both the interactive SVG diagrams
+and their committed static fallbacks. `src/graphics.js` connects the controls;
+`src/graphics.css` contains the article-specific layout and print rules.
+
+After changing a diagram or refreshing the retail model snapshot, regenerate:
+
+```sh
+node scripts/make-graphics-diagrams.mjs
+npm run build
+npm run check
+```
+
+This uses only committed repository data. The three-model subset retains the
+original command ordering, including repetitions. The checked-in small-disc
+masks in `content/graphics-disc-masks.json` come from the native raster tables;
+they are not generated circles. Static SVGs have separate narrow-screen layouts.
+The controls add no autoplay or colour flashing, and printing uses the static
+illustrations even when JavaScript has loaded.
+
+With a build served at the Pages subpath, the optional Playwright checks cover
+all 24 model/octant combinations, keyboard controls, five viewport widths,
+no-JavaScript reading, images, print fallbacks and browser errors:
+
+```sh
+python3 scripts/check-graphics.py --url http://127.0.0.1:4187/corncob-contemplated/ --screenshots /tmp/corncob-graphics-review
+```
+
+As with the other browser scripts, `PLAYWRIGHT_DRIVER_CLI` can point to a matching
+Node driver. `scripts/capture-graphics.py --url <served-site>/` recreates the White
+Sands / Quari palette comparison from the atlas, with colour animation paused.
+The other two PNGs are preserved original-game output and a decoded cockpit mask;
+their source paths and hashes are in the evidence notes. Normal builds do not
+launch a browser or require the separate research checkout.

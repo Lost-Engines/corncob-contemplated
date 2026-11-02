@@ -1,7 +1,8 @@
 # Corncob Contemplated
 
 A public introduction to our investigation of Corncob 3D: an illustrated account,
-interactive world atlas and model gallery, plus a small soundtrack listening room.
+interactive world atlas and model gallery, a standalone graphics-engine article,
+and a small soundtrack listening room.
 
 **[Visit Corncob Contemplated](https://lost-engines.github.io/corncob-contemplated/)** ·
 [Full research archive](https://lostengines.com/corncob/) · [Lost Engines](https://lostengines.com/)

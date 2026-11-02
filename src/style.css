@@ -48,3 +48,5 @@
 .mission-briefing{border-top:1px solid #45634d;padding-top:16px;line-height:1.7;overflow-wrap:anywhere}.mission-briefing h3{font-size:16px}.mission-briefing p{margin:0 0 1em}.mission-meta{font-size:12px;color:#b8c9be}.mission-list button[aria-pressed=true]{background:#46664e;border-color:#bed1ba}.toolbar label:has(input:disabled){opacity:.55}
 
 .atlas-exhibit>.mission-briefing{margin:0;padding:24px;max-width:80ch;border:0}.mission-briefing h3{margin-top:0}
+
+.graphics-callout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:45px;align-items:center;border-top:1px solid var(--line)}.graphics-callout h2{font:400 38px/1.15 Georgia,serif;letter-spacing:-.025em;margin:15px 0}.graphics-callout p:not(.eyebrow){font-size:16px;line-height:1.8;max-width:48ch}.graphics-callout img{display:block;width:100%;height:auto;image-rendering:pixelated}.graphics-callout .button{margin-top:12px}@media(max-width:850px){.graphics-callout{grid-template-columns:1fr;gap:28px}}
